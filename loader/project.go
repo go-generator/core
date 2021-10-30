@@ -20,7 +20,6 @@ func LoadProject(filename string) (metadata.Project, error) {
 	}
 	return input, err
 }
-
 func LoadProjects(directory string) (map[string]metadata.Project, error) { // map[string]metadata.Project ---> "project name" : metadata project
 	projects := make(map[string]metadata.Project)
 	names, err := list(directory)

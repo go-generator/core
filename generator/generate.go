@@ -9,11 +9,9 @@ import (
 	"text/template"
 )
 
-func Generate(project metadata.Project, templates map[string]interface{}, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options...func(map[string]string) map[string]interface{}) ([]metadata.File, error) {
-	var (
-		outputFile []metadata.File
-		err        error
-	)
+func Generate(project metadata.Project, templates map[string]interface{}, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...func(map[string]string) map[string]interface{}) ([]metadata.File, error) {
+	var outputFile []metadata.File
+	var err error
 	pathSeparator := string(os.PathSeparator)
 	var parseEnv func(map[string]string) map[string]interface{}
 	if len(options) > 0 && options[0] != nil {
@@ -109,7 +107,7 @@ func generateFilePath(path string, m map[string]interface{}) (string, error) {
 	filePath = strings.ReplaceAll(filePath, "/", string(os.PathSeparator))
 	return filePath, err
 }
-func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options...map[string]interface{}) []map[string]interface{} {
+func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) []map[string]interface{} {
 	var collections []map[string]interface{}
 	var env map[string]interface{}
 	if len(options) > 0 && options[0] != nil {
@@ -123,7 +121,6 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	}
 	return collections
 }
-
 func ParseEnv(env map[string]string) map[string]interface{} {
 	res := make(map[string]interface{}, 0)
 	res["layer"] = false

@@ -27,7 +27,6 @@ func ToOutput(path, directory string, input metadata.Project, templateMap map[st
 	output.Files = outputFiles
 	return output, err
 }
-
 func GenerateFromFile(templateDir, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), loadTemplates func(string) (map[string]interface{}, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
 	var output metadata.Output
 	input, err := loadProject(projectMetadata)
@@ -62,4 +61,8 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	}
 	input.Env = initEnv(input.Env, projectName)
 	return input, err
+}
+func ExportProject(project metadata.Project, models []metadata.Model) metadata.Project {
+	project.Models = models
+	return project
 }
