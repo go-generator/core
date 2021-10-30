@@ -2,54 +2,45 @@ package io
 
 import (
 	"fmt"
-	iou "github.com/core-go/io"
 	"github.com/go-generator/core"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
-func ConvertFile(f metadata.File) iou.File {
-	return iou.File{
-		Name:    f.Name,
-		Content: f.Content,
-	}
-}
-
-func ConvertFiles(f []metadata.File) []iou.File {
-	var out []iou.File
-	for _, v := range f {
-		out = append(out, ConvertFile(v))
-	}
-	return out
-}
-
-func SaveOutput(directory string, output metadata.Output) error {
-	err := iou.SaveFiles(directory, ConvertFiles(output.Files))
+func Save(directory string, output metadata.Output) error {
+	err := SaveFiles(directory, output.Files)
 	if err != nil {
 		return fmt.Errorf("error writing files: %w", err)
 	}
 	return err
 }
-
-func ShellExecutor(program string, arguments []string) ([]byte, error) {
+func Exec(program string, arguments []string) ([]byte, error) {
 	cmd := exec.Command(program, arguments...)
 	return cmd.Output()
 }
-
-func CreateDir(path string) (err error) {
+func MkDir(path string) (err error) {
 	err = os.MkdirAll(path, 0644)
 	if err != nil && os.IsNotExist(err) {
 		return
 	}
 	return
 }
-
-//func FileDetailsToOutput(content model.FilesDetails, out *model.Output) {
-//	var file metadata.File
-//	for _, k := range content.Files {
-//		out.OutFile = append(output.OutFile, WriteStruct(&k))
-//		file.Name = content.Model + "/" + ToLower(k.Name) + ".go_bk"
-//		file.Content = k.WriteFile.String()
-//		out.Files = append(out.Files, file)
-//	}
-//}
+func SaveFiles(rootDirectory string, files []metadata.File) error {
+	for _, v := range files {
+		fullPath := rootDirectory + string(os.PathSeparator) + v.Name
+		err := SaveFile(fullPath, v.Content)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func SaveFile(fullName string, content string) error {
+	err := os.MkdirAll(filepath.Dir(fullName), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(fullName, []byte(content), os.ModePerm)
+}

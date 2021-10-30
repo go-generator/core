@@ -3,7 +3,6 @@ package loader
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/core-go/io"
 	"github.com/go-generator/core"
 	"io/ioutil"
 	"path/filepath"
@@ -24,7 +23,7 @@ func LoadProject(filename string) (metadata.Project, error) {
 
 func LoadProjects(directory string) (map[string]metadata.Project, error) { // map[string]metadata.Project ---> "project name" : metadata project
 	projects := make(map[string]metadata.Project)
-	names, err := io.ListFileNames(directory)
+	names, err := list(directory)
 	if err != nil {
 		return nil, err
 	}
@@ -36,4 +35,19 @@ func LoadProjects(directory string) (map[string]metadata.Project, error) { // ma
 		projects[n] = proj
 	}
 	return projects, err
+}
+func list(path string) ([]string, error) {
+	var names []string
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	folder, err := ioutil.ReadDir(absPath)
+	if err != nil {
+		return names, err
+	}
+	for _, tmpl := range folder {
+		names = append(names, tmpl.Name())
+	}
+	return names, nil
 }
