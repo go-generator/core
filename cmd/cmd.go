@@ -117,7 +117,7 @@ func RunWithCommandLine(types map[string]string) {
 	if err != nil {
 		log.Println(err)
 	}
-	err = io.SaveFile("./models.json", data.Bytes())
+	err = io.Save("./models.json", data.Bytes())
 	if err != nil {
 		log.Println(err)
 	}
