@@ -9,7 +9,7 @@ import (
 	"text/template"
 )
 
-func Generate(project metadata.Project, templates map[string]interface{}, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...func(map[string]string) map[string]interface{}) ([]metadata.File, error) {
+func Generate(project metadata.Project, templates map[string]string, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...func(map[string]string) map[string]interface{}) ([]metadata.File, error) {
 	var outputFile []metadata.File
 	var err error
 	pathSeparator := string(os.PathSeparator)
@@ -28,7 +28,7 @@ func Generate(project metadata.Project, templates map[string]interface{}, buildM
 		if err != nil {
 			return nil, fmt.Errorf("generating static file error: %w", err)
 		}
-		if s, ok := templates[v.Name].(string); ok {
+		if s, ok := templates[v.Name]; ok {
 			text, err1 := parsing(s, m, "static_"+v.Name)
 			if err1 != nil {
 				return nil, fmt.Errorf("generating static file content error: %w", err1)
@@ -40,7 +40,7 @@ func Generate(project metadata.Project, templates map[string]interface{}, buildM
 		m := make(map[string]interface{}, 0)
 		m["env"] = env
 		m["collections"] = collections
-		if str, ok := templates[a.Name].(string); ok {
+		if str, ok := templates[a.Name]; ok {
 			text, err2 := parsing(str, m, "array_"+a.Name)
 			if err2 != nil {
 				return nil, fmt.Errorf("generating model file error: %w", err2)
@@ -60,7 +60,7 @@ func Generate(project metadata.Project, templates map[string]interface{}, buildM
 	}
 	for _, e := range project.Entities {
 		for _, v := range collections {
-			if str, ok := templates[e.Name].(string); ok {
+			if str, ok := templates[e.Name]; ok {
 				text, err2 := parsing(str, v, "entity_"+e.Name)
 				if err2 != nil {
 					return nil, fmt.Errorf("generating model file error: %w", err2)

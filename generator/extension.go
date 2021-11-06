@@ -15,7 +15,7 @@ func ToString(files []metadata.File) (string, error) {
 	}
 	return string(file), err
 }
-func ToOutput(path, directory string, input metadata.Project, templateMap map[string]interface{}, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
+func ToOutput(path, directory string, input metadata.Project, templateMap map[string]string, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
 	var output metadata.Output
 	output.Path = path
 	output.Directory = directory
@@ -27,7 +27,7 @@ func ToOutput(path, directory string, input metadata.Project, templateMap map[st
 	output.Files = outputFiles
 	return output, err
 }
-func GenerateFromFile(templateDir, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), loadTemplates func(string) (map[string]interface{}, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
+func GenerateFromFile(templateDir, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), loadTemplates func(string) (map[string]string, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
 	var output metadata.Output
 	input, err := loadProject(projectMetadata)
 	if err != nil {
