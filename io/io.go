@@ -1,6 +1,7 @@
 package io
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-generator/core"
 	"io/ioutil"
@@ -9,6 +10,38 @@ import (
 	"path/filepath"
 )
 
+func SaveModels(models []metadata.Model, filePath string, notAppendExt...bool) error {
+	data, err := json.MarshalIndent(&models, "", " ")
+	if err != nil {
+		return err
+	}
+	if !(len(notAppendExt) > 0 && notAppendExt[0]) {
+		if filepath.Ext(filePath) != "json" {
+			filePath += ".json"
+		}
+	}
+	err = SaveFile(filePath, data)
+	if err != nil {
+		return err
+	}
+	return err
+}
+func SaveProject(projectStruct metadata.Project, filePath string, notAppendExt...bool) error {
+	data, err := json.MarshalIndent(&projectStruct, "", " ")
+	if err != nil {
+		return err
+	}
+	if !(len(notAppendExt) > 0 && notAppendExt[0]) {
+		if filepath.Ext(filePath) != "json" {
+			filePath += ".json"
+		}
+	}
+	err = SaveFile(filePath, data)
+	if err != nil {
+		return err
+	}
+	return err
+}
 func Save(directory string, output metadata.Output) error {
 	err := SaveFiles(directory, output.Files)
 	if err != nil {
@@ -30,14 +63,21 @@ func MkDir(path string) (err error) {
 func SaveFiles(rootDirectory string, files []metadata.File) error {
 	for _, v := range files {
 		fullPath := rootDirectory + string(os.PathSeparator) + v.Name
-		err := SaveFile(fullPath, v.Content)
+		err := SaveContent(fullPath, v.Content)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func SaveFile(fullName string, content string) error {
+func SaveFile(fullName string, data []byte) error {
+	err := os.MkdirAll(filepath.Dir(fullName), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(fullName, data, os.ModePerm)
+}
+func SaveContent(fullName string, content string) error {
 	err := os.MkdirAll(filepath.Dir(fullName), os.ModePerm)
 	if err != nil {
 		return err
