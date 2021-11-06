@@ -2,10 +2,10 @@ package display
 
 import (
 	"errors"
-	"fyne.io/fyne"
-	"fyne.io/fyne/container"
-	"fyne.io/fyne/theme"
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 	"github.com/kbinani/screenshot"
 )
 
@@ -38,7 +38,7 @@ func showPopUpWindows(app fyne.App, title, message string, displaySize fyne.Size
 	wa.Show()
 }
 
-func ResizeWindows(wRatio, hRatio int, size fyne.Size) fyne.Size {
+func ResizeWindows(wRatio, hRatio float32, size fyne.Size) fyne.Size {
 	return fyne.Size{
 		Width:  wRatio * size.Width / 100,
 		Height: hRatio * size.Height / 100,
