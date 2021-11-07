@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -45,36 +46,41 @@ const (
 	ErrInvPort    = "invalid port"
 	ErrInvDBName  = "invalid relationship name"
 )
-func ConnectToDatabase(dc metadata.DatabaseConfig, driver string, dbCache metadata.Database, authType string) (*sql.DB, error) { //use data source
+func BuildDataSourceName(c metadata.DatabaseConfig) string {
+	if c.Driver == "postgres" {
+		uri := fmt.Sprintf("user=%s dbname=%s password=%s host=%s port=%d sslmode=disable", c.User, c.Database, c.Password, c.Host, c.Port)
+		return uri
+	} else if c.Driver == "mysql" {
+		uri := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", c.User, c.Password, c.Host, c.Port, c.Database)
+		return uri
+	} else if c.Driver == "mssql" { // mssql
+		uri := fmt.Sprintf("sqlserver://%s:%s@%s:%d?Database=%s", c.User, c.Password, c.Host, c.Port, c.Database)
+		return uri
+	} else if c.Driver == "godror" || c.Driver == "oracle" {
+		return fmt.Sprintf("user=\"%s\" password=\"%s\" connectString=\"%s:%d/%s\"", c.User, c.Password, c.Host, c.Port, c.Database)
+	} else { //sqlite
+		return c.Host // return sql.Open("sqlite3", c.Host)
+	}
+}
+func ConnectToDatabase(c metadata.DatabaseConfig, driver string, dbCache metadata.Database, authType string) (*sql.DB, error) { //use data source
 	switch authType {
 	case "Basic":
-		var dataSource string
-		port := strconv.FormatInt(dc.Port, 64)
-		switch driver {
-		case s.DriverMysql:
-			dataSource = dc.User + ":" + dc.Password + "@(" + dc.Host + ":" + port + ")/" + dc.Database + "?charset=utf8&parseTime=True&loc=Local"
-		case s.DriverPostgres:
-			dataSource = "user=" + dc.User + " dbname=" + dc.Database + " password=" + dc.Password + " host=" + dc.Host + " port=" + port + " sslmode=disable"
-		case s.DriverMssql:
-			dataSource = "sqlserver://" + dc.User + ":" + dc.Password + "@" + dc.Host + ":" + port + "?Database=" + dc.Database
-		case s.DriverSqlite3:
-			dataSource = dc.Host
-		default:
-			return nil, errors.New(s.DriverNotSupport)
-		}
-		return sql.Open(dc.Driver, dataSource)
+		dataSource := BuildDataSourceName(c)
+		return sql.Open(c.Driver, dataSource)
 	default:
 		switch driver {
-		case s.DriverMysql:
-			return sql.Open(s.DriverMysql, dbCache.MySql)
-		case s.DriverPostgres:
-			return sql.Open(s.DriverPostgres, dbCache.Postgres)
-		case s.DriverMssql:
-			return sql.Open(s.DriverMssql, dbCache.Mssql)
-		case s.DriverSqlite3:
-			return sql.Open(s.DriverSqlite3, dbCache.Sqlite3)
-		case s.DriverOracle:
-			return sql.Open(s.DriverSqlite3, dbCache.Oracle)
+		case "mysql":
+			return sql.Open("mysql", dbCache.MySql)
+		case "postgres":
+			return sql.Open("postgres", dbCache.Postgres)
+		case "mssql":
+			return sql.Open("mssql", dbCache.Mssql)
+		case "sqlite3":
+			return sql.Open("sqlite3", dbCache.Sqlite3)
+		case "godror":
+			return sql.Open("godror", dbCache.Oracle)
+		case "oracle":
+			return sql.Open("godror", dbCache.Oracle)
 		default:
 			return nil, errors.New(s.DriverNotSupport)
 		}
