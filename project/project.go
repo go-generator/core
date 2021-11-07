@@ -10,7 +10,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/core-go/cipher"
-	cio "github.com/core-go/io"
 	s "github.com/core-go/sql"
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/display"
@@ -293,7 +292,7 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 				return
 			}
 		} else {
-			prj, err = generator.ExportProject(projectTmpl, cio.Load, prTmplName, projectName, toModels, generator.InitEnv)
+			prj, err = generator.ExportProject(projectTmpl, io.Load, prTmplName, projectName, toModels, generator.InitEnv)
 			if err != nil {
 				display.ShowErrorWindows(app, err, size)
 				return
