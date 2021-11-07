@@ -9,7 +9,7 @@ import (
 	"flag"
 	"github.com/core-go/cipher"
 	s "github.com/core-go/sql"
-	metadata "github.com/go-generator/core"
+	"github.com/go-generator/core"
 	"github.com/go-generator/core/export"
 	edb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/relationship"
