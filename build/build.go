@@ -3,37 +3,15 @@ package build
 import (
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/generator"
+	"github.com/go-generator/core/jstypes"
 	st "github.com/go-generator/core/strings"
 	"strings"
 )
 
-var JSTypes = map[string]string{
-	"bool":      "boolean",
-	"byte":      "nummber",
-	"time":      "time",
-	"date":      "date",
-	"datedate":  "datedate",
-	"int8":      "integer",
-	"int16":     "integer",
-	"int32":     "integer",
-	"int64":     "integer",
-	"float32":   "number",
-	"float64":   "number",
-	"decimal":   "number",
-	"string":    "string",
-	"text":      "text",
-	"binary":    "binary",
-	"json":      "object",
-	"xml":       "string",
-	"bool[]":    "primitives",
-	"int8[]":    "primitives",
-	"int16[]":   "primitives",
-	"int32[]":   "primitives",
-	"int64[]":   "primitives",
-	"float32[]": "primitives",
-	"float64[]": "primitives",
-	"decimal[]": "primitives",
-	"string[]":  "primitives",
+func MergeMap(m map[string]interface{}, sub map[string]string) {
+	for k, v := range sub {
+		m[k] = v
+	}
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
 	names := generator.BuildNames(m.Name, st.ToPlural)
@@ -83,7 +61,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			} else {
 				sub["type"] = f.Type
 			}
-			jt, ok2 := JSTypes[f.Type]
+			jt, ok2 := jstypes.JSTypes[f.Type]
 			if ok2 {
 				if jt == "number" || jt == "integer" {
 					hasNumber = true
@@ -131,10 +109,11 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				sub["goFilterType"] = "*Int32Range"
 				sub["tsFilterType"] = "number|NumberRange"
 			} else {
-				sub["goFilterType"] = t
-				sub["tsFilterType"] = t
-				sub["javaFilterType"] = t
-				sub["csFilterType"] = t
+				stp := sub["type"]
+				sub["goFilterType"] = stp
+				sub["tsFilterType"] = stp
+				sub["javaFilterType"] = stp
+				sub["csFilterType"] = stp
 			}
 			if f.Key {
 				ck++
@@ -195,11 +174,6 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		collection["fields"] = fields
 	}
 	return collection
-}
-func MergeMap(m map[string]interface{}, sub map[string]string) {
-	for k, v := range sub {
-		m[k] = v
-	}
 }
 func buildGoGetId(s string) (string, string, string) {
 	if s == "int" {
