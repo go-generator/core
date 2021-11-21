@@ -6,7 +6,7 @@ import (
 	s "github.com/core-go/sql"
 )
 
-func ListTablesQuery(database, driver string) (string, error) {
+func ListTablesQuery(database, dbname, driver string) (string, error) {
 	switch driver {
 	case s.DriverMysql:
 		query := `
@@ -39,6 +39,17 @@ func ListTablesQuery(database, driver string) (string, error) {
 		WHERE 
 			type ='table' AND 
 			name NOT LIKE 'sqlite_%';`, nil
+	case s.DriverOracle:
+		query := `
+		SELECT
+			DISTINCT OWNER,
+			OBJECT_NAME "table"
+		FROM
+			DBA_OBJECTS
+		WHERE
+			OBJECT_TYPE = 'TABLE'
+			AND OWNER = '%v'`
+		return fmt.Sprintf(query, dbname), nil
 	default:
 		return "", errors.New("unsupported driver")
 	}
@@ -100,7 +111,6 @@ func ListCompositeKeyQuery(database, driver, table string) (string, error) { //T
 }
 
 func ListAllPrimaryKeys(database, driver, table string) (string, error) {
-	//TODO: Add get all primary keys for other relationship
 	query := ""
 	switch driver {
 	case s.DriverMysql:
@@ -146,11 +156,30 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 		query := `
 		select name as 'column' from pragma_table_info('%v') as 'p' where p.pk = TRUE`
 		return fmt.Sprintf(query, table), nil
+	case s.DriverOracle:
+		query := `
+		SELECT
+		all_cons_columns.table_name AS "table",
+		all_cons_columns.column_name AS "column"
+		FROM
+			all_constraints,
+			all_cons_columns
+		WHERE
+			all_constraints.constraint_type = 'P'
+			AND all_constraints.constraint_name = all_cons_columns.constraint_name
+			AND all_constraints.owner = all_cons_columns.owner
+			AND all_cons_columns.table_name = '%v'
+			AND all_cons_columns.owner = '%v'
+		ORDER BY
+			all_cons_columns.owner,
+			all_cons_columns.table_name,
+			all_cons_columns.position`
+		return fmt.Sprintf(query, table, database), nil
 	}
 	return query, nil
 }
 
-func ListReferenceQuery(database, driver string) (string, error) {
+func ListReferenceQuery(database, driver, table string) (string, error) {
 	switch driver {
 	case s.DriverMysql:
 		query := `
@@ -193,6 +222,25 @@ func ListReferenceQuery(database, driver string) (string, error) {
 	case s.DriverSqlite3:
 		return `
 		SELECT * FROM sqlite_master WHERE type = 'table' AND sql LIKE '%FOREIGN KEY%'`, nil
+	case s.DriverOracle:
+		query := `
+		SELECT
+			b.table_name AS "table",
+			b.column_name AS "column",
+			a.table_name AS "referenced_table",
+			a.column_name AS "referenced_column"
+		FROM
+			all_cons_columns a
+		JOIN all_constraints c ON
+			a.owner = c.owner
+			AND a.constraint_name = c.constraint_name
+		JOIN all_cons_columns b ON
+			c.owner = b.owner
+			AND c.r_constraint_name = b.constraint_name
+		WHERE
+			c.constraint_type = 'R'
+			AND a.table_name = '%v'`
+		return fmt.Sprintf(query, table), nil
 	default:
 		return "", errors.New(s.DriverNotSupport)
 	}

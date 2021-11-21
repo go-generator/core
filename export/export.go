@@ -8,6 +8,7 @@ import (
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
 	edb "github.com/go-generator/core/export/db"
+	"github.com/go-generator/core/export/query"
 	"github.com/go-generator/core/export/relationship"
 	st "github.com/go-generator/core/strings"
 	"regexp"
@@ -16,6 +17,7 @@ import (
 )
 
 func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []edb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+	table = strings.ToLower(table)
 	var m metadata.Model
 	var raw string
 	if !strings.Contains(table, "_") {
@@ -29,7 +31,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	m.Table = table
 	m.Source = table
 	for _, v := range sqlTable {
-		colNames := build.BuildNames(v.Column)
+		colNames := build.BuildNames(strings.ToLower(v.Column))
 		var f metadata.Field
 		if hasCompositeKey {
 			f.Source = colNames["name"]
@@ -41,7 +43,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			}
 		}
 		f.Column = v.Column
-		f.Name = colNames["name"]
+		f.Name = colNames["Name"]
 		f.Type = types[v.DataType]
 		if v.Length.Valid {
 			l, err := strconv.Atoi(v.Length.String)
@@ -95,20 +97,11 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	return &m, nil
 }
 
-func getRelationship(column string, rt []relationship.RelTables) *relationship.RelTables {
-	for _, v := range rt {
-		if column == v.ReferencedColumn {
-			return &v
-		}
-	}
-	return nil
-}
-
-func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string) ([]metadata.Model, error) {
+func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]string) ([]metadata.Model, error) {
 	var projectModels []metadata.Model
 	for _, t := range tables {
 		var tablesData edb.TableInfo
-		err := InitTables(ctx, db, database, t, &tablesData)
+		err := InitTables(ctx, db, database, t, &tablesData, primaryKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -121,10 +114,11 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 	return projectModels, nil
 }
 
-func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb.TableInfo) error {
+func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb.TableInfo, primaryKeys map[string][]string) error {
+	query := ""
 	switch s.GetDriver(db) {
 	case s.DriverMysql:
-		query := `
+		query = `
 			SELECT 
 				TABLE_NAME AS 'table',
 				COLUMN_NAME AS 'column_name',
@@ -138,11 +132,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 				TABLE_SCHEMA = '%v'
 					AND TABLE_NAME = '%v'`
 		query = fmt.Sprintf(query, database, table)
-		err := s.Query(ctx, db, nil, &st.Fields, query)
-		if err != nil {
-			return err
-		}
-		st.HasCompositeKey = HasCompositeKey(st.Fields)
 	case s.DriverPostgres:
 		query := `
 			SELECT TABLE_NAME AS TABLE,
@@ -153,28 +142,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 			FROM INFORMATION_SCHEMA.COLUMNS
 			WHERE TABLE_NAME = '%v';`
 		query = fmt.Sprintf(query, table)
-		err := s.Query(ctx, db, nil, &st.Fields, query)
-		if err != nil {
-			return err
-		}
-		count := 0
-		for i := range st.Fields {
-			c, err := relationship.CheckPrimaryTag(ctx, db, database, s.GetDriver(db), table, st.Fields[i].Column)
-			if err != nil {
-				return err
-			}
-			if c {
-				st.Fields[i].ColumnKey = "PRI"
-				count++
-			}
-		}
-		if count < 2 {
-			st.HasCompositeKey = true
-		} else {
-			st.HasCompositeKey = false
-		}
 	case s.DriverMssql:
-		query := `
+		query = `
 			SELECT 
     			TABLE_NAME AS 'table',
     			COLUMN_NAME AS 'column_name',
@@ -186,26 +155,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 			WHERE
 				TABLE_NAME = '%v'`
 		query = fmt.Sprintf(query, table)
-		err := s.Query(ctx, db, nil, &st.Fields, query)
-		if err != nil {
-			return err
-		}
-		count := 0
-		for i := range st.Fields {
-			c, err := relationship.CheckPrimaryTag(ctx, db, database, s.DriverMssql, table, st.Fields[i].Column)
-			if err != nil {
-				return err
-			}
-			if c {
-				st.Fields[i].ColumnKey = "PRI"
-				count++
-			}
-		}
-		if count < 2 {
-			st.HasCompositeKey = true
-		} else {
-			st.HasCompositeKey = false
-		}
 	case s.DriverSqlite3:
 		query := `
 		select name as 'column_name', type, pk as 'column_key' from pragma_table_info('%v');`
@@ -222,55 +171,120 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 		if err != nil {
 			return err
 		}
-		for i := range st.Fields {
-			if st.Fields[i].ColumnKey == "1" {
-				st.Fields[i].ColumnKey = "PRI"
-			}
-			re := regexp.MustCompile(`\d+`)
-			if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
-				st.Fields[i].DataType = "NUMERIC"
-			}
-			if strings.Contains(st.Fields[i].DataType, "VARCHAR") {
-				st.Fields[i].Length = sql.NullString{
-					String: re.FindString(st.Fields[i].DataType),
-					Valid:  true,
-				}
-				st.Fields[i].DataType = "VARCHAR"
-			}
-			if strings.Contains(st.Fields[i].DataType, "CHARACTER") {
-				st.Fields[i].Length = sql.NullString{
-					String: re.FindString(st.Fields[i].DataType),
-					Valid:  true,
-				}
-				st.Fields[i].DataType = "CHARACTER"
-			}
-			if strings.Contains(st.Fields[i].DataType, "NVARCHAR") {
-				st.Fields[i].Length = sql.NullString{
-					String: re.FindString(st.Fields[i].DataType),
-					Valid:  true,
-				}
-				st.Fields[i].DataType = "NVARCHAR"
-			}
-			for j := range notNull {
-				if st.Fields[i].Column == notNull[j].Name {
-					if notNull[j].NotNull {
-						st.Fields[i].IsNullable = "0"
-					} else {
-						st.Fields[i].IsNullable = "1"
-					}
-				}
-			}
+		sqlitePKMap(st, notNull)
+		return nil
+	case s.DriverOracle:
+		query = `
+			SELECT
+				col.owner AS "schema_name",
+				col.table_name AS "table",
+				col.column_name AS "column_name",
+				col.data_type AS "type",
+				col.data_length AS "length",
+				col.nullable AS "is_nullable"
+			FROM
+				sys.all_tab_columns col
+			INNER JOIN sys.all_tables t ON
+				col.owner = t.owner
+				AND col.table_name = t.table_name
+			WHERE
+				col.owner = '%v'
+				AND col.table_name = '%v'
+			ORDER BY
+				col.column_id`
+		query = fmt.Sprintf(query, database, table)
+	}
+	err := s.Query(ctx, db, nil, &st.Fields, query)
+	if err != nil {
+		return err
+	}
+	for i := range st.Fields {
+		if IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
+			st.Fields[i].ColumnKey = "PRI"
 		}
 	}
+	st.HasCompositeKey = HasCKey(table, primaryKeys)
+	for i := range st.Fields {
+		if IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
+			st.Fields[i].ColumnKey = "PRI"
+		}
+	}
+	st.HasCompositeKey = HasCKey(table, primaryKeys)
 	return nil
 }
 
-func HasCompositeKey(st []edb.TableFields) bool {
-	var count int
-	for _, v := range st {
-		if v.ColumnKey == "PRI" {
-			count++
+func IsPrimaryKey(key, table string, pks map[string][]string) bool {
+	for i := range pks[table] {
+		if key == pks[table][i] {
+			return true
 		}
 	}
-	return count < 2
+	return false
+}
+
+func HasCKey(table string, pks map[string][]string) bool {
+	if len(pks[table]) > 1 {
+		return true
+	}
+	return false
+}
+
+func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, tables []string) (map[string][]string, error) {
+	primaryKeys := make(map[string][]string)
+	for _, t := range tables {
+		var keys []relationship.PrimaryKey
+		q, err := query.ListAllPrimaryKeys(dbName, driver, t)
+		err = s.Query(ctx, db, nil, &keys, q)
+		if err != nil {
+			return nil, err
+		}
+		var pks []string
+		for _, k := range keys {
+			pks = append(pks, k.Column)
+		}
+		primaryKeys[t] = pks
+	}
+	return primaryKeys, nil
+}
+
+func sqlitePKMap(st *edb.TableInfo, notNull []relationship.SqliteNotNull) {
+	for i := range st.Fields {
+		if st.Fields[i].ColumnKey == "1" {
+			st.Fields[i].ColumnKey = "PRI"
+		}
+		re := regexp.MustCompile(`\d+`)
+		if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
+			st.Fields[i].DataType = "NUMERIC"
+		}
+		if strings.Contains(st.Fields[i].DataType, "VARCHAR") {
+			st.Fields[i].Length = sql.NullString{
+				String: re.FindString(st.Fields[i].DataType),
+				Valid:  true,
+			}
+			st.Fields[i].DataType = "VARCHAR"
+		}
+		if strings.Contains(st.Fields[i].DataType, "CHARACTER") {
+			st.Fields[i].Length = sql.NullString{
+				String: re.FindString(st.Fields[i].DataType),
+				Valid:  true,
+			}
+			st.Fields[i].DataType = "CHARACTER"
+		}
+		if strings.Contains(st.Fields[i].DataType, "NVARCHAR") {
+			st.Fields[i].Length = sql.NullString{
+				String: re.FindString(st.Fields[i].DataType),
+				Valid:  true,
+			}
+			st.Fields[i].DataType = "NVARCHAR"
+		}
+		for j := range notNull {
+			if st.Fields[i].Column == notNull[j].Name {
+				if notNull[j].NotNull {
+					st.Fields[i].IsNullable = "0"
+				} else {
+					st.Fields[i].IsNullable = "1"
+				}
+			}
+		}
+	}
 }

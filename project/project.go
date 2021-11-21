@@ -83,6 +83,13 @@ func GetDatabaseName(dbCache metadata.Database, driver string) (string, error) {
 		return s2[0], nil
 	case s.DriverSqlite3:
 		return filepath.Base(dbCache.Sqlite3), nil
+	case s.DriverOracle:
+		s1 := strings.Split(dbCache.Oracle, "//")
+		if len(s1) < 2 {
+			return "", errors.New("invalid datasource")
+		}
+		s2 := strings.Split(s1[1], ":")
+		return s2[0], nil
 	default:
 		return "", errors.New(s.DriverNotSupport)
 	}

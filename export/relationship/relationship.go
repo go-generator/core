@@ -115,7 +115,7 @@ func initRelationshipTable(ctx context.Context, db *sql.DB, database string) ([]
 	driver := s.GetDriver(db)
 	var relTables []RelTables
 	var sqliteRels []SqliteRel
-	query, err := query.ListReferenceQuery(database, driver)
+	query, err := query.ListReferenceQuery(database, driver, "")
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +330,8 @@ func CheckPrimaryTag(ctx context.Context, db *sql.DB, database, driver, table, c
 				}
 			}
 		}
+	case s.DriverOracle:
+
 	}
 	return false, err
 } // Check if a column has primary tag
@@ -351,7 +353,7 @@ func listPrimaryKeys(ctx context.Context, db *sql.DB, database, table string) ([
 func ListTables(ctx context.Context, db *sql.DB, database string) ([]Tables, error) {
 	driver := s.GetDriver(db)
 	var tables []Tables
-	query, err := query.ListTablesQuery(database, driver)
+	query, err := query.ListTablesQuery(database, "", driver)
 	if err != nil {
 		return nil, err
 	}
@@ -361,3 +363,81 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]Tables, err
 	}
 	return tables, err
 }
+
+func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string) ([]RelTables, error) {
+	driver := s.GetDriver(db)
+	var relTables []RelTables
+	var sqliteRels []SqliteRel
+	switch s.GetDriver(db) {
+	case s.DriverSqlite3:
+		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")
+		if err != nil {
+			return nil, err
+		}
+		err = s.Query(ctx, db, nil, &sqliteRels, listReferenceQuery)
+		if err != nil {
+			return nil, err
+		}
+
+		tb := regexp.MustCompile(`(?s)\".*?\"`)
+		fk := regexp.MustCompile(`(?s)\(\[.*?\]\)`)
+		for i := range sqliteRels {
+			tables := tb.FindAllString(sqliteRels[i].Sql, -1)
+			for i := range tables {
+				tables[i] = strings.ReplaceAll(tables[i], `"`, ``)
+			}
+			var tbNames []string
+			parentTb := tables[0]
+			tbNames = append(tbNames, parentTb)
+			tables = pop(tables)
+			for i := range tables {
+				if i == len(tables)-1 {
+					tbNames = append(tbNames, tables[i])
+				} else {
+					tbNames = append(tbNames, parentTb)
+					tbNames = append(tbNames, tables[i])
+				}
+			}
+			columns := fk.FindAllString(sqliteRels[i].Sql, -1)
+			for i := range columns {
+				columns[i] = strings.ReplaceAll(columns[i], `([`, ``)
+				columns[i] = strings.ReplaceAll(columns[i], `])`, ``)
+			}
+			if len(tables) > 0 {
+				for i := 0; i < len(tbNames)-1; i++ {
+					var rel RelTables
+					rel.Table = tbNames[i]
+					rel.ReferencedTable = tbNames[i+1]
+					rel.Column = columns[i]
+					rel.ReferencedColumn = columns[i+1]
+					relTables = append(relTables, rel)
+				}
+			}
+		}
+		return relTables, err
+	case s.DriverOracle:
+		var relTable []RelTables
+		for i := range tables {
+			q, err := query.ListReferenceQuery(database, driver, tables[i])
+			if err != nil {
+				return nil, err
+			}
+			err = s.Query(ctx, db, nil, &relTable, q)
+			if err != nil {
+				return nil, err
+			}
+			relTables = append(relTables, relTable...)
+		}
+		return relTables, nil
+	default:
+		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")
+		if err != nil {
+			return nil, err
+		}
+		err = s.Query(ctx, db, nil, &relTables, listReferenceQuery)
+		if err != nil {
+			return nil, err
+		}
+		return relTables, err
+	}
+} // Find all columns, table and its referenced columns, tables

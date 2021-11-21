@@ -31,7 +31,7 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]string, err
 		tables []Tables
 		res    []string
 	)
-	query, err := query.ListTablesQuery(database, driver)
+	query, err := query.ListTablesQuery(database, database, driver)
 	if err != nil {
 		return nil, err
 	}
