@@ -2,10 +2,10 @@ package strings
 
 import "strings"
 
-var ends = []string{"ies", "ees", "ses", "xes", "zes", "shes", "ches", "aes", "oes", "ues"}
-var replaces = []string{"y", "ee", "s", "x", "z", "sh", "ch", "ae", "oe", "ue"}
-var plural = []string{"people", "women", "men", "fungus", "feet", "teeth"}
-var singular = []string{"person", "woman", "man", "fungi", "foot", "tooth"}
+var ends = []string{"ies", "ees", "aes", "ues", "ves", "ays", "eys", "iys", "oys", "uys", "ses", "xes", "zes", "shes", "ches", "aos", "eos", "ios", "oos", "uos", "oes"}
+var replaces = []string{"y", "ee", "ae", "ue", "fe", "ay", "ey", "iy", "oy", "uy", "s", "x", "z", "sh", "ch", "ao", "eo", "io", "oo", "uo", "o"}
+var plural = []string{"people", "women", "men", "children", "fungus", "feet", "teeth", "geese", "mice", "gasses", "phenomena", "criteria", "sheep", "series", "species", "deer", "fish", "roofs", "beliefs", "chefs", "chiefs", "photos", "pianos", "halos", "volcanos", "volcanoes", "fezzes" }
+var singular = []string{"person", "woman", "man", "child", "fungi", "foot", "tooth", "goose", "mouse", "gas", "phenomenon", "criterion", "sheep", "series", "species", "deer", "fish", "roof", "belief", "chef", "chief", "photo", "piano", "halo", "volcano", "volcano", "fez"}
 
 func ToSingular(s string) string {
 	if len(s) <= 1 {
