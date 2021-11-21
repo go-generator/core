@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -178,6 +179,7 @@ type Entity struct {
 }
 
 func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) ([]Entity, []map[string]interface{}) {
+	var re = regexp.MustCompile(`date|datetime|time.Time`)
 	var entities []Entity
 	var collections []map[string]interface{}
 	var env map[string]interface{}
@@ -189,8 +191,6 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	for _, m := range project.Models {
 		model := buildModel(m, project.Types, env)
 		entity := Entity{Model: m, Params: model}
-		entities = append(entities, entity)
-		collections = append(collections, model)
 		if m.Ones != nil && len(m.Ones) > 0 {
 			var ones []map[string]interface{}
 			for _, c := range m.Ones {
@@ -221,9 +221,16 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 					sub := buildModel(*s, project.Types, env)
 					arrays = append(arrays, sub)
 				}
+				for _, f := range s.Fields {
+					if re.MatchString(f.Type) {
+						model["time"] = true
+					}
+				}
 			}
 			model["arrays"] = arrays
 		}
+		entities = append(entities, entity)
+		collections = append(collections, model)
 	}
 	return entities, collections
 }
