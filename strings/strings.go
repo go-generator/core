@@ -22,9 +22,11 @@ func ToCamelCase(s string) string {
 		return strings.ToLower(string(s[0])) + s[1:]
 	}
 }
+
 func ToPascalCase(s string) string {
 	return strings.ToUpper(string(s[0])) + s[1:]
 }
+
 func ToSingular(s string) string {
 	if len(s) <= 1 {
 		return s
@@ -35,16 +37,16 @@ func ToSingular(s string) string {
 		}
 	}
 	if strings.HasSuffix(s, "ies") {
-		return s[0 : len(s)-3] + "y"
+		return s[0:len(s)-3] + "y"
 	}
 	if strings.HasSuffix(s, "es") && len(s) >= 5 {
 		l := len(s)
-		g := s[l-3:l-2]
+		g := s[l-3 : l-2]
 		if IsVowel(g) {
 			return s[0 : len(s)-1]
 		}
-		if IsVowel(s[l-4:l-3]) {
-			if IsVowel(s[l-5:l-4]) {
+		if IsVowel(s[l-4 : l-3]) {
+			if IsVowel(s[l-5 : l-4]) {
 				return s[0 : len(s)-1]
 			} else {
 				return s[0 : len(s)-2]
@@ -87,6 +89,7 @@ func ToPlural(s string) string {
 	}
 	return s[0:] + "s"
 }
+
 func BuildSnakeName(s string) string {
 	s2 := strings.ToLower(s)
 	s3 := ""
@@ -102,6 +105,7 @@ func BuildSnakeName(s string) string {
 	}
 	return s3
 }
+
 func UnBuildSnakeName(s string) string {
 	s2 := strings.ToUpper(s)
 	s1 := string(s[0])

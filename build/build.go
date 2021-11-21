@@ -1,11 +1,12 @@
 package build
 
 import (
-	"github.com/go-generator/core"
-	"github.com/go-generator/core/jstypes"
-	st "github.com/go-generator/core/strings"
 	"regexp"
 	"strings"
+
+	"github.com/gertd/go-pluralize"
+	"github.com/go-generator/core"
+	"github.com/go-generator/core/jstypes"
 )
 
 func MergeMap(m map[string]interface{}, sub map[string]string) {
@@ -14,8 +15,9 @@ func MergeMap(m map[string]interface{}, sub map[string]string) {
 	}
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
+	pluralize := pluralize.NewClient()
 	var re = regexp.MustCompile(`date|datetime|time`)
-	names := BuildNames(m.Name, st.ToPlural)
+	names := BuildNames(m.Name, pluralize.Plural)
 	collection := make(map[string]interface{}, 0)
 	MergeMap(collection, names)
 	table := m.Table

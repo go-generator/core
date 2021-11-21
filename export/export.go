@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gertd/go-pluralize"
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
 	d "github.com/go-generator/core/driver"
@@ -42,6 +43,7 @@ func init() {
 }
 
 func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []gdb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+	pluralize := pluralize.NewClient()
 	origin := table
 	table = strings.ToLower(table)
 	var m metadata.Model
@@ -51,7 +53,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	} else {
 		raw = st.UnBuildSnakeName(strings.ToLower(table))
 	}
-	n := st.ToSingular(raw)
+	n := pluralize.Singular(raw) //st.ToSingular(raw)
 	tableNames := build.BuildNames(n)
 	if tableNames["Name"] == origin || tableNames["name"] == origin {
 		m.Name = origin
@@ -96,7 +98,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			refNames := build.BuildNames(ref.ReferencedTable)
 			var relModel metadata.Relationship
 			relModel.Ref = ref.ReferencedTable
-			relModel.Model = st.ToSingular(refNames["Name"])
+			relModel.Model = pluralize.Singular(refNames["Name"])
 			relModel.Fields = append(relModel.Fields, metadata.Link{
 				Column: ref.Column,
 				To:     ref.ReferencedColumn,
