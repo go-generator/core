@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
+	st "github.com/go-generator/core/strings"
 	"github.com/go-generator/core/types"
 )
 
@@ -76,7 +77,13 @@ func Generate(
 	for _, a := range project.Arrays {
 		m := make(map[string]interface{}, 0)
 		m["env"] = env
-		m["collections"] = collections
+		var cols []map[string]interface{}
+		for i := range collections {
+			if InCollection(project.Collection, collections[i]["Name"].(string)) {
+				cols = append(cols, collections[i])
+			}
+		}
+		m["collections"] = cols
 		if str, ok := templates[a.Name]; ok {
 			text, err2 := parsing(str, m, "array_"+a.Name, funcMap)
 			if err2 != nil {
@@ -139,7 +146,7 @@ func Generate(
 
 func InCollection(collection []string, name string) bool {
 	for _, c := range collection {
-		if name == c {
+		if strings.Compare(st.ToCamelCase(name), st.ToCamelCase(c)) == 0 {
 			return true
 		}
 	}
@@ -191,6 +198,13 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	for _, m := range project.Models {
 		model := buildModel(m, project.Types, env)
 		entity := Entity{Model: m, Params: model}
+		entities = append(entities, entity)
+		collections = append(collections, model)
+		for _, f := range m.Fields {
+			if re.MatchString(f.Type) {
+				model["time"] = true
+			}
+		}
 		if m.Ones != nil && len(m.Ones) > 0 {
 			var ones []map[string]interface{}
 			for _, c := range m.Ones {
@@ -223,20 +237,18 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 				if s != nil {
 					sub := buildModel(*s, project.Types, env)
 					arrays = append(arrays, sub)
-					for _, f := range s.Fields {
-						if re.MatchString(f.Type) {
-							model["time"] = true
-						}
-					}
 					if s.Arrays == nil || len(s.Arrays) == 0 {
 						sub["leaf"] = true
+					}
+				}
+				for _, f := range s.Fields {
+					if re.MatchString(f.Type) && project.Env["leaf"] == "false" {
+						model["time"] = true
 					}
 				}
 			}
 			model["arrays"] = arrays
 		}
-		entities = append(entities, entity)
-		collections = append(collections, model)
 	}
 	return entities, collections
 }

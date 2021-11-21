@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/go-generator/core"
+	st "github.com/go-generator/core/strings"
 )
 
 func ToString(files []metadata.File) (string, error) {
@@ -80,7 +81,7 @@ func BuildCollection(models []metadata.Model) []string {
 	var collections []string
 	for _, m := range models {
 		if !(len(m.Models) > 0 && len(m.Arrays) <= 0) {
-			collections = append(collections, m.Name)
+			collections = append(collections, st.ToCamelCase(m.Name))
 		}
 	}
 	return collections
