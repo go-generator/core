@@ -1,4 +1,4 @@
-package generator
+package build
 
 import (
 	st "github.com/go-generator/core/strings"
