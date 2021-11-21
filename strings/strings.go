@@ -10,8 +10,8 @@ const (
 	DriverSqlite3  = "sqlite3"
 )
 
-var ends = []string{"ies", "ees", "aes", "ues", "ves", "ays", "eys", "iys", "oys", "uys", "aos", "eos", "ios", "oos", "uos", "oes", "ses", "xes", "zes", "shes", "ches"}
-var replaces = []string{"y", "ee", "ae", "ue", "fe", "ay", "ey", "iy", "oy", "uy", "ao", "eo", "io", "oo", "uo", "o", "s", "x", "z", "sh", "ch"}
+var ends = []string{"ays", "eys", "iys", "oys", "uys", "aos", "eos", "ios", "oos", "uos", "ses", "xes", "zes", "shes", "ches"}
+var replaces = []string{"ay", "ey", "iy", "oy", "uy", "ao", "eo", "io", "oo", "uo", "s", "x", "z", "sh", "ch"}
 var plural = []string{"people", "children", "women", "men", "fungus", "feet", "teeth", "geese", "mice", "gasses", "phenomena", "criteria", "sheep", "series", "species", "deer", "fish", "roofs", "beliefs", "chefs", "chiefs", "photos", "pianos", "halos", "volcanos", "volcanoes", "fezzes"}
 var singular = []string{"person", "child", "woman", "man", "fungi", "foot", "tooth", "goose", "mouse", "gas", "phenomenon", "criterion", "sheep", "series", "species", "deer", "fish", "roof", "belief", "chef", "chief", "photo", "piano", "halo", "volcano", "volcano", "fez"}
 
@@ -34,6 +34,24 @@ func ToSingular(s string) string {
 			return s[0:len(s)-len(si)] + singular[i]
 		}
 	}
+	if strings.HasSuffix(s, "ies") {
+		return s[0 : len(s)-3] + "y"
+	}
+	if strings.HasSuffix(s, "es") && len(s) >= 5 {
+		l := len(s)
+		g := s[l-3:l-2]
+		if IsVowel(g) {
+			return s[0 : len(s)-1]
+		}
+		if IsVowel(s[l-4:l-3]) {
+			if IsVowel(s[l-5:l-4]) {
+				return s[0 : len(s)-1]
+			} else {
+				return s[0 : len(s)-2]
+			}
+		}
+		return s[0 : len(s)-1]
+	}
 	for i, si := range ends {
 		if strings.HasSuffix(s, si) {
 			return s[0:len(s)-len(si)] + replaces[i]
@@ -43,6 +61,13 @@ func ToSingular(s string) string {
 		return s[0 : len(s)-1]
 	}
 	return s
+}
+func IsVowel(s string) bool {
+	x := strings.ToLower(s)
+	if x == "a" || x == "e" || x == "i" || x == "o" || x == "u" {
+		return true
+	}
+	return false
 }
 func ToPlural(s string) string {
 	if len(s) <= 1 {
