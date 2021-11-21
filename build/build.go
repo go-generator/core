@@ -57,8 +57,10 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			}
 			sub["simpleTypes"] = f.Type
 			t, ok := types[f.Type]
+			ut := f.Type
 			if ok && len(t) > 0 {
 				sub["type"] = t
+				ut = t
 			} else {
 				sub["type"] = f.Type
 			}
@@ -83,6 +85,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["source"] = source
 			sub["column"] = column
 			sub["length"] = f.Length
+			sub["maxlength"] = f.Length
 			sub["env"] = env
 			if re.MatchString(x) {
 				sub["goFilterType"] = "*TimeRange"
@@ -132,6 +135,40 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				tsIds = append(tsIds, ":"+tmp["name"])
 			} else {
 				sub["bson"] = f.Name + ",omitempty"
+			}
+			/*
+			"int8":      "int8",
+				"int16":     "int16",
+				"int32":     "int32",
+				"int64":     "int64",
+				"float32":   "float32",
+				"float64":   "float64",
+				"decimal":   "float64",
+			 */
+			if ut == "float64" || ut == "decimal" || ut == "float32" {
+				if f.Scale != nil && *f.Scale > 0 {
+					sub["scale"] = *f.Scale
+				}
+				if f.Precision != nil && *f.Precision > 0 {
+					sub["precision"] = *f.Precision
+					if f.Scale != nil && *f.Scale > 0 {
+						sub["maxlength"] = *f.Precision - *f.Scale + 1
+					} else {
+						sub["maxlength"] = *f.Precision - *f.Scale
+					}
+				}
+			} else if ut == "int64" {
+				sub["scale"] = 0
+				sub["maxlength"] = 20
+			} else if ut == "int32" {
+				sub["scale"] = 0
+				sub["maxlength"] = 9
+			} else if ut == "int16" {
+				sub["scale"] = 0
+				sub["maxlength"] = 4
+			} else if ut == "int8" {
+				sub["scale"] = 0
+				sub["maxlength"] = 2
 			}
 			fields = append(fields, sub)
 		}
