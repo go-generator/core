@@ -73,7 +73,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			f.Name = colNames["Name"]
 		}
 		if v.Column == colNames["Name"] || x == colNames["name"] {
-			f.Name = v.Column
+			f.Name = x
 		} else {
 			f.Column = v.Column
 			f.Name = colNames["Name"]
