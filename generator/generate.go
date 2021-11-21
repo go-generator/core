@@ -110,7 +110,13 @@ func Generate(
 	}
 	for _, e := range project.Entities {
 		for _, v := range entities {
-			if e.Model || InCollection(project.Collection, v.Model.Name) {
+			count := 0
+			for _, k := range v.Model.Fields {
+				if k.Key {
+					count++
+				}
+			}
+			if count > 1 {
 				if str, ok := templates[e.Name]; ok {
 					text, err2 := parsing(str, v.Params, "entity_"+e.Name, funcMap)
 					if err2 != nil {
@@ -135,6 +141,34 @@ func Generate(
 					})
 				} else {
 					return nil, errors.New("template must be string")
+				}
+			} else {
+				if e.Model || InCollection(project.Collection, v.Model.Name) && e.Name != "id" {
+					if str, ok := templates[e.Name]; ok {
+						text, err2 := parsing(str, v.Params, "entity_"+e.Name, funcMap)
+						if err2 != nil {
+							return nil, fmt.Errorf("generating model file error: %w", err2)
+						}
+						entityPath, err3 := generateFilePath(e.File, v.Params, funcMap)
+						if err3 != nil {
+							return nil, fmt.Errorf("generating file path error: %w", err3)
+						}
+						entityPath = strings.ReplaceAll(entityPath, "/", pathSeparator)
+						if e.Replace {
+							if strings.Contains(text, "{|") {
+								text = strings.Replace(text, "{|", "{", -1)
+							}
+							if strings.Contains(text, "|}") {
+								text = strings.Replace(text, "|}", "}", -1)
+							}
+						}
+						outputFile = append(outputFile, metadata.File{
+							Name:    entityPath,
+							Content: text,
+						})
+					} else {
+						return nil, errors.New("template must be string")
+					}
 				}
 			}
 		}
@@ -203,6 +237,12 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 		}
 	}
 	for _, m := range project.Models {
+		count := 0
+		for _, k := range m.Fields {
+			if k.Key {
+				count++
+			}
+		} //check composite key
 		model := buildModel(m, project.Types, env)
 		entity := Entity{Model: m, Params: model}
 		hasTime := HasTime(project.Models, m.Name)
@@ -249,12 +289,18 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 						sub["leaf"] = true
 					}
 					sub["parent"] = m.Name
+					sub["link"] = c.Fields
 					arrays = append(arrays, sub)
 				}
 			}
 			model["arrays"] = arrays
 		}
 		model["time"] = hasTime
+		if count > 1 {
+			model["composite"] = true
+		} else {
+			model["composite"] = false
+		}
 		entities = append(entities, entity)
 		collections = append(collections, model)
 	}
