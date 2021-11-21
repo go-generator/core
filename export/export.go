@@ -119,18 +119,20 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 	switch driver {
 	case d.Mysql:
 		query = `
-			SELECT 
-				TABLE_NAME AS 'table',
-				COLUMN_NAME AS 'column_name',
-				DATA_TYPE AS 'type',
-				IS_NULLABLE AS 'is_nullable',
-				COLUMN_KEY AS 'column_key',
-				CHARACTER_MAXIMUM_LENGTH AS 'length'
-			FROM
+			select
+				table_name as 'table',
+				column_name as 'column_name',
+				data_type as 'type',
+				is_nullable as 'is_nullable',
+				column_key as 'column_key',
+				character_maximum_length as 'length',
+				numeric_precision as 'precision',
+				numeric_scale as 'scale'
+			from
 				information_schema.columns
-			WHERE
-				TABLE_SCHEMA = '%v'
-					AND TABLE_NAME = '%v'`
+			where
+				table_schema = '%v'
+				and table_name = '%v'`
 		query = fmt.Sprintf(query, database, table)
 		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 		if err != nil {
@@ -270,6 +272,40 @@ func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, t
 func mapDataType(driver string, st *gdb.TableInfo) {
 	re := regexp.MustCompile(`\d+`)
 	switch driver {
+	case d.Mysql:
+		for i := range st.Fields {
+			if strings.Contains(st.Fields[i].DataType, "decimal") {
+				scale := 0
+				precision := 38 // default precision for oracle
+				if st.Fields[i].Scale != nil {
+					scale = *st.Fields[i].Scale
+				}
+				if st.Fields[i].Precision != nil {
+					precision = *st.Fields[i].Precision
+				}
+				if st.Fields[i].Scale == nil && st.Fields[i].Precision == nil {
+					st.Fields[i].DataType = "decimal(7,0)"
+				} else {
+					if scale == 0 {
+						if precision <= 2 {
+							st.Fields[i].DataType = "decimal(2,0)"
+						} else {
+							if precision <= 4 {
+								st.Fields[i].DataType = "decimal(4,0)"
+							} else {
+								if precision <= 6 {
+									st.Fields[i].DataType = "decimal(6,0)"
+								} else {
+									st.Fields[i].DataType = "decimal(7,0)"
+								}
+							}
+						}
+					} else {
+						st.Fields[i].DataType = "decimal"
+					}
+				}
+			}
+		}
 	case d.Sqlite3:
 		for i := range st.Fields {
 			l := re.FindString(st.Fields[i].DataType)

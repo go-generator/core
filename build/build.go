@@ -14,7 +14,7 @@ func MergeMap(m map[string]interface{}, sub map[string]string) {
 	}
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
-	var re = regexp.MustCompile(`date|datetime`)
+	var re = regexp.MustCompile(`date|datetime|time`)
 	names := BuildNames(m.Name, st.ToPlural)
 	collection := make(map[string]interface{}, 0)
 	MergeMap(collection, names)
@@ -137,14 +137,14 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				sub["bson"] = f.Name + ",omitempty"
 			}
 			/*
-			"int8":      "int8",
-				"int16":     "int16",
-				"int32":     "int32",
-				"int64":     "int64",
-				"float32":   "float32",
-				"float64":   "float64",
-				"decimal":   "float64",
-			 */
+				"int8":      "int8",
+					"int16":     "int16",
+					"int32":     "int32",
+					"int64":     "int64",
+					"float32":   "float32",
+					"float64":   "float64",
+					"decimal":   "float64",
+			*/
 			if ut == "float64" || ut == "decimal" || ut == "float32" {
 				if f.Scale != nil && *f.Scale > 0 {
 					sub["scale"] = *f.Scale

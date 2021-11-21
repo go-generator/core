@@ -129,10 +129,14 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 		isP1 := IsPrimaryKey(relations[i].Column, relations[i].Table, primaryKeys)
 		isP2 := IsPrimaryKey(relations[i].ReferencedColumn, relations[i].ReferencedTable, primaryKeys)
 		if isP1 && isP2 {
-			if len(primaryKeys[relations[i].Table]) != len(primaryKeys[relations[i].ReferencedTable]) {
-				relations[i].Relationship = OneToMany
-			} else {
+			if len(primaryKeys[relations[i].Table]) == len(primaryKeys[relations[i].ReferencedTable]) {
 				relations[i].Relationship = OneToOne
+			} else {
+				if len(primaryKeys[relations[i].Table]) > len(primaryKeys[relations[i].ReferencedTable]) {
+					relations[i].Relationship = ManyToOne
+				} else {
+					relations[i].Relationship = OneToMany
+				}
 			}
 		}
 		if isP1 && !isP2 {
@@ -151,6 +155,25 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 				ReferencedTable:  relations[i].Table,
 				ReferencedColumn: relations[i].Column,
 				Relationship:     ManyToOne,
+			}
+			for j := range relations {
+				if reverse == relations[j] {
+					skip = true
+					break
+				}
+			} // skip duplicate
+			if !skip {
+				relations = append(relations, reverse)
+			}
+		}
+		if relations[i].Relationship == ManyToOne {
+			skip := false
+			reverse := RelTables{
+				Table:            relations[i].ReferencedTable,
+				Column:           relations[i].ReferencedColumn,
+				ReferencedTable:  relations[i].Table,
+				ReferencedColumn: relations[i].Column,
+				Relationship:     OneToMany,
 			}
 			for j := range relations {
 				if reverse == relations[j] {

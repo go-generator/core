@@ -2,11 +2,12 @@ package display
 
 import (
 	"errors"
+	"path/filepath"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/kbinani/screenshot"
-	"path/filepath"
 )
 
 var errNoActiveDisplay = errors.New("no active display")
@@ -14,6 +15,7 @@ var errNoActiveDisplay = errors.New("no active display")
 func Notify(content string, title string) {
 	fyne.CurrentApp().SendNotification(fyne.NewNotification(title, content))
 }
+
 func SetIcon(path string) (fyne.Resource, error) {
 	settingIcon, err := filepath.Abs(path)
 	if err != nil {
@@ -25,6 +27,7 @@ func SetIcon(path string) (fyne.Resource, error) {
 	}
 	return r2, nil
 }
+
 func GetActiveDisplaySize(index int) (int, int, error) {
 	n := screenshot.NumActiveDisplays()
 	if n < 1 {
@@ -33,6 +36,7 @@ func GetActiveDisplaySize(index int) (int, int, error) {
 	screen := screenshot.GetDisplayBounds(index)
 	return screen.Dx(), screen.Dy(), nil
 }
+
 func PopUpWindows(message string, c fyne.Canvas) {
 	var popup *widget.PopUp
 	popup = widget.NewModalPopUp(container.NewBorder(nil, widget.NewButton("Close", func() {
@@ -42,6 +46,7 @@ func PopUpWindows(message string, c fyne.Canvas) {
 	}), nil, nil, widget.NewLabel(message)), c)
 	popup.Show()
 }
+
 func ResizeWindows(wRatio, hRatio float32, size fyne.Size) fyne.Size {
 	return fyne.Size{
 		Width:  wRatio * size.Width / 100,

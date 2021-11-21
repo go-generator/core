@@ -29,7 +29,7 @@ func init() {
 }
 
 type Tables struct {
-	Name string `gorm:"column:table"`
+	Table string `gorm:"column:table"`
 }
 
 func ToLower(s string) string {
@@ -54,7 +54,7 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]string, err
 		return nil, err
 	}
 	for i := range tables {
-		res = append(res, tables[i].Name)
+		res = append(res, tables[i].Table)
 	}
 	return res, err
 }

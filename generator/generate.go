@@ -186,7 +186,6 @@ type Entity struct {
 }
 
 func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) ([]Entity, []map[string]interface{}) {
-	var re = regexp.MustCompile(`date|datetime|time.Time`)
 	var entities []Entity
 	var collections []map[string]interface{}
 	var env map[string]interface{}
@@ -205,14 +204,15 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 			project.Models = models
 		}
 	}
+
 	for _, m := range project.Models {
+		hasTime := false
 		model := buildModel(m, project.Types, env)
 		entity := Entity{Model: m, Params: model}
-		entities = append(entities, entity)
-		collections = append(collections, model)
-		for _, f := range m.Fields {
-			if re.MatchString(f.Type) {
-				model["time"] = true
+		for _, f := range m.Arrays {
+			if HasTime(project.Models, f.Ref) {
+				hasTime = true
+				break
 			}
 		}
 		if m.Ones != nil && len(m.Ones) > 0 {
@@ -251,17 +251,32 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 						sub["leaf"] = true
 					}
 				}
-				for _, f := range s.Fields {
-					if re.MatchString(f.Type) && project.Env["leaf"] == "false" {
-						model["time"] = true
-					}
-				}
 			}
 			model["arrays"] = arrays
 		}
+		if _, ok := project.Env["layer"]; ok {
+			model["time"] = hasTime
+		}
+		entities = append(entities, entity)
+		collections = append(collections, model)
 	}
 	return entities, collections
 }
+
+func HasTime(models []metadata.Model, name string) bool {
+	var re = regexp.MustCompile(`date|datetime|time.Time`)
+	for i := range models {
+		if models[i].Table == name {
+			for _, f := range models[i].Fields {
+				if re.MatchString(f.Type) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func GetModel(models []metadata.Model, name string) *metadata.Model {
 	for _, m := range models {
 		if m.Name == name {
@@ -270,6 +285,7 @@ func GetModel(models []metadata.Model, name string) *metadata.Model {
 	}
 	return nil
 }
+
 func ParseEnv(env map[string]string) map[string]interface{} {
 	res := make(map[string]interface{}, 0)
 	res["layer"] = false
