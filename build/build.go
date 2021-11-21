@@ -2,7 +2,6 @@ package build
 
 import (
 	"github.com/go-generator/core"
-	"github.com/go-generator/core/generator"
 	"github.com/go-generator/core/jstypes"
 	st "github.com/go-generator/core/strings"
 	"regexp"
@@ -16,7 +15,7 @@ func MergeMap(m map[string]interface{}, sub map[string]string) {
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
 	var re = regexp.MustCompile(`date|datetime`)
-	names := generator.BuildNames(m.Name, st.ToPlural)
+	names := BuildNames(m.Name, st.ToPlural)
 	collection := make(map[string]interface{}, 0)
 	MergeMap(collection, names)
 	table := m.Table
@@ -50,7 +49,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		hasNumber := false
 		for _, f := range m.Fields {
 			sub := make(map[string]interface{}, 0)
-			tmp := generator.BuildNames(f.Name)
+			tmp := BuildNames(f.Name)
 			MergeMap(sub, tmp)
 			x := f.Type
 			if re.MatchString(x) {

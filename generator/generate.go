@@ -12,7 +12,7 @@ import (
 )
 
 func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, langTmpl map[string]map[string]string) ([]metadata.File, error) {
-	prj, err := DecodeProject([]byte(projectJson), projectName, InitEnv)
+	prj, err := DecodeProject([]byte(projectJson), projectName, build.InitEnv)
 	if err != nil {
 		return nil, err
 	}

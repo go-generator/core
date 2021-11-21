@@ -77,6 +77,7 @@ func buildProjectName(name string) map[string]string {
 		"project_constant": strings.ToUpper(raw),
 	}
 }
+
 func buildEnvNames(name, v string) map[string]string {
 	names := map[string]string{
 		name:            v,
