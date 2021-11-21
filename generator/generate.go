@@ -4,11 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-generator/core"
+	"github.com/go-generator/core/build"
+	"github.com/go-generator/core/types"
 	"os"
 	"strings"
 	"text/template"
 )
 
+func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, langTmpl map[string]map[string]string) ([]metadata.File, error) {
+	prj, err := DecodeProject([]byte(projectJson), projectName, InitEnv)
+	if err != nil {
+		return nil, err
+	}
+	_, ok := prj.Env["go_module"]
+	if ok && projectName != "" {
+		prj.Env["go_module"] = projectName
+	}
+	prj.Types = types.Types[prj.Language]
+	return Generate(prj, langTmpl[prj.Language], funcMap, build.BuildModel)
+}
 func Generate(
 	project metadata.Project,
 	templates map[string]string,

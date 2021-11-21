@@ -40,6 +40,29 @@ func Load(directory string) (map[string]string, error) {
 	}
 	return tm, nil
 }
+func LoadAll(directory string) (map[string]map[string]string, error) {
+	templates := make(map[string]map[string]string)
+	folders, err := List(directory)
+	if err != nil {
+		return nil, err
+	}
+	for _, folder := range folders {
+		names, err := List(filepath.Join(directory, folder))
+		if err != nil {
+			return nil, err
+		}
+		tm := make(map[string]string, 0)
+		for _, n := range names {
+			content, err := ioutil.ReadFile(directory + string(os.PathSeparator) + folder + string(os.PathSeparator) + n)
+			if err != nil {
+				return nil, err
+			}
+			tm[n] = string(content)
+		}
+		templates[folder] = tm
+	}
+	return templates, err
+}
 func IsValidPath(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {
