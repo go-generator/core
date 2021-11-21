@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/go-generator/core/export/query"
 	"log"
 	"regexp"
 	"strings"
@@ -30,7 +31,7 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]string, err
 		tables []Tables
 		res    []string
 	)
-	query, err := buildTableQuery(database, driver)
+	query, err := query.ListTablesQuery(database, driver)
 	if err != nil {
 		return nil, err
 	}
