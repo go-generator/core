@@ -20,7 +20,7 @@ func ConnectDB(dbCache metadata.Database, driver string) (*sql.DB, error) {
 	case s.DriverSqlite3:
 		return sql.Open(driver, dbCache.Sqlite3)
 	case s.DriverOracle:
-		return sql.Open(driver, dbCache.Oracle)
+		return sql.Open("godror", dbCache.Oracle)
 	default:
 		return nil, errors.New(s.DriverNotSupport)
 	}
