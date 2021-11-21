@@ -47,10 +47,8 @@ type ColumnRelation struct {
 func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string, primaryKeys map[string][]string) ([]RelTables, error) {
 	driver := s.GetDriver(db)
 	var (
-		relations      []RelTables
-		sqliteRels     []SqliteRel
-		tableRelations []TableRelation
-		colRelations   []ColumnRelation
+		relations  []RelTables
+		sqliteRels []SqliteRel
 	)
 	switch s.GetDriver(db) {
 	case d.Sqlite3:
@@ -66,6 +64,10 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 		tb := regexp.MustCompile(`(?s)\".*?\"`)
 		fk := regexp.MustCompile(`(?s)\(\[.*?\]\)`)
 		for i := range sqliteRels {
+			var (
+				tableRelations []TableRelation
+				colRelations   []ColumnRelation
+			)
 			tables := tb.FindAllString(sqliteRels[i].Sql, -1)
 			for i := range tables {
 				tables[i] = strings.ReplaceAll(tables[i], `"`, ``)

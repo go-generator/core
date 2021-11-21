@@ -84,8 +84,10 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	}
 	for _, ref := range rt {
 		if ref.Table == table {
+			refNames := build.BuildNames(ref.ReferencedTable)
 			var relModel metadata.Relationship
 			relModel.Ref = ref.ReferencedTable
+			relModel.Model = st.ToSingular(refNames["Name"])
 			relModel.Fields = append(relModel.Fields, metadata.Link{
 				Column: ref.Column,
 				To:     ref.ReferencedColumn,
