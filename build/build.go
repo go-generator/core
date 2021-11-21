@@ -3,6 +3,7 @@ package build
 import (
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/generator"
+	st "github.com/go-generator/core/strings"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ var JSTypes = map[string]string{
 	"string[]":  "primitives",
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
-	names := generator.BuildNames(m.Name, ToPlural)
+	names := generator.BuildNames(m.Name, st.ToPlural)
 	collection := make(map[string]interface{}, 0)
 	MergeMap(collection, names)
 	table := m.Table
@@ -194,9 +195,6 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		collection["fields"] = fields
 	}
 	return collection
-}
-func ToPlural(s string) string {
-	return s + "s"
 }
 func MergeMap(m map[string]interface{}, sub map[string]string) {
 	for k, v := range sub {
