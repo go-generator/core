@@ -70,7 +70,9 @@ func Generate(
 					text = strings.Replace(text, "|}", "}", -1)
 				}
 			}
-			outputFile = append(outputFile, metadata.File{Name: v.File, Content: text})
+			if !IsEmpty(text) {
+				outputFile = append(outputFile, metadata.File{Name: v.File, Content: text})
+			}
 		}
 	}
 	for _, a := range project.Arrays {
@@ -101,10 +103,12 @@ func Generate(
 					text = strings.Replace(text, "|}", "}", -1)
 				}
 			}
-			outputFile = append(outputFile, metadata.File{
-				Name:    entityPath,
-				Content: text,
-			})
+			if !IsEmpty(text) {
+				outputFile = append(outputFile, metadata.File{
+					Name:    entityPath,
+					Content: text,
+				})
+			}
 		} else {
 			return nil, errors.New("template must be string")
 		}
@@ -139,10 +143,12 @@ func Generate(
 					if _, ok := project.Env["root"]; ok {
 						entityPath = st.FormatDirectory(entityPath)
 					}
-					outputFile = append(outputFile, metadata.File{
-						Name:    entityPath,
-						Content: text,
-					})
+					if !IsEmpty(text) {
+						outputFile = append(outputFile, metadata.File{
+							Name:    entityPath,
+							Content: text,
+						})
+					}
 				} else {
 					return nil, errors.New("template must be string")
 				}
@@ -169,10 +175,12 @@ func Generate(
 						if _, ok := project.Env["root"]; ok {
 							entityPath = st.FormatDirectory(entityPath)
 						}
-						outputFile = append(outputFile, metadata.File{
-							Name:    entityPath,
-							Content: text,
-						})
+						if !IsEmpty(text) {
+							outputFile = append(outputFile, metadata.File{
+								Name:    entityPath,
+								Content: text,
+							})
+						}
 					} else {
 						return nil, errors.New("template must be string")
 					}
@@ -182,7 +190,14 @@ func Generate(
 	}
 	return outputFile, err
 }
-
+func IsEmpty(text string) bool {
+	if len(text) < 20 {
+		if len(strings.TrimSpace(text)) == 0 {
+			return true
+		}
+	}
+	return false
+}
 func InCollection(collection []string, name string) bool {
 	for _, c := range collection {
 		if strings.Compare(strings.ToLower(name), strings.ToLower(c)) == 0 {
