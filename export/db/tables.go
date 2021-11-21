@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	s "github.com/core-go/sql"
+
+	d "github.com/go-generator/core/driver"
+	s "github.com/go-generator/core/export/sql"
 )
 
 type TableFields struct {
@@ -47,7 +49,7 @@ func HasCompositeKey(st []TableFields) bool {
 
 func InitTables(ctx context.Context, db *sql.DB, database, table string, st *TableInfo) error {
 	switch s.GetDriver(db) {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `
 			SELECT 
 				TABLE_NAME AS 'table',

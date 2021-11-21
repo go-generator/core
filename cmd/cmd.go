@@ -8,8 +8,8 @@ import (
 	"errors"
 	"flag"
 	"github.com/core-go/cipher"
-	s "github.com/core-go/sql"
 	"github.com/go-generator/core"
+	d "github.com/go-generator/core/driver"
 	"github.com/go-generator/core/export"
 	edb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/relationship"
@@ -30,16 +30,16 @@ func ConnectToDatabase(dc metadata.DatabaseConfig) (*sql.DB, error) { //use data
 		var dataSource string
 		port := strconv.FormatInt(dc.Port, 64)
 		switch driver {
-		case s.DriverMysql:
+		case d.Mysql:
 			dataSource = dc.User + ":" + dc.Password + "@(" + dc.Host + ":" + port + ")/" + dc.Database + "?charset=utf8&parseTime=True&loc=Local"
-		case s.DriverPostgres:
+		case d.Postgres:
 			dataSource = "user=" + dc.User + " dbname=" + dc.Database + " password=" + dc.Password + " host=" + dc.Host + " port=" + port + " sslmode=disable"
-		case s.DriverMssql:
+		case d.Mssql:
 			dataSource = "sqlserver://" + dc.User + ":" + dc.Password + "@" + dc.Host + ":" + port + "?Database=" + dc.Database
-		case s.DriverSqlite3:
+		case d.Sqlite3:
 			dataSource = dc.Host
 		default:
-			return nil, errors.New(s.DriverNotSupport)
+			return nil, errors.New(d.NotSupport)
 		}
 		return sql.Open(dc.Driver, dataSource)
 	} else {

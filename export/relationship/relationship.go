@@ -7,8 +7,9 @@ import (
 	"regexp"
 	"strings"
 
-	s "github.com/core-go/sql"
+	d "github.com/go-generator/core/driver"
 	"github.com/go-generator/core/export/query"
+	s "github.com/go-generator/core/export/sql"
 )
 
 var (
@@ -41,7 +42,7 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 	var relations []RelTables
 	var sqliteRels []SqliteRel
 	switch s.GetDriver(db) {
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")
 		if err != nil {
 			return nil, err
@@ -86,7 +87,7 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 				}
 			}
 		}
-	case s.DriverOracle:
+	case d.Oracle:
 		var relTable []RelTables
 		for i := range tables {
 			q, err := query.ListReferenceQuery(database, driver, tables[i])

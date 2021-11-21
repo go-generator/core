@@ -3,12 +3,12 @@ package query
 import (
 	"errors"
 	"fmt"
-	s "github.com/core-go/sql"
+	d "github.com/go-generator/core/driver"
 )
 
 func ListTablesQuery(database, dbname, driver string) (string, error) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `
 		SELECT 
     		TABLE_NAME AS 'table'
@@ -17,7 +17,7 @@ func ListTablesQuery(database, dbname, driver string) (string, error) {
 		WHERE
     		table_schema = '%v'`
 		return fmt.Sprintf(query, database), nil
-	case s.DriverPostgres:
+	case d.Postgres:
 		return `
 		SELECT 
     		table_name as table
@@ -25,12 +25,12 @@ func ListTablesQuery(database, dbname, driver string) (string, error) {
     		information_schema.tables
 		WHERE
     		table_schema='public' AND table_type='BASE TABLE'`, nil
-	case s.DriverMssql:
+	case d.Mssql:
 		return `
 		SELECT name 'table'
 		FROM     sys.sysobjects
 		WHERE  (xtype = 'U')`, nil
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		return `
 		SELECT 
 			name as 'table'
@@ -39,7 +39,7 @@ func ListTablesQuery(database, dbname, driver string) (string, error) {
 		WHERE 
 			type ='table' AND 
 			name NOT LIKE 'sqlite_%';`, nil
-	case s.DriverOracle:
+	case d.Oracle:
 		query := `
 		SELECT
 			DISTINCT OWNER,
@@ -57,17 +57,17 @@ func ListTablesQuery(database, dbname, driver string) (string, error) {
 
 func ListUniqueQuery(database, driver, table string) (string, error) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `show indexes from %v.%v`
 		return fmt.Sprintf(query, database, table), nil
-	case s.DriverPostgres:
+	case d.Postgres:
 		query := `
 		SELECT TABLENAME AS TABLE,
 			INDEXNAME AS INDEX
 		FROM PG_INDEXES
 		WHERE TABLENAME = '%v'`
 		return fmt.Sprintf(query, table), nil
-	case s.DriverMssql:
+	case d.Mssql:
 		query := `
 			SELECT 
     			COLUMN_NAME AS 'column', CONSTRAINT_NAME AS 'constraint'
@@ -76,18 +76,18 @@ func ListUniqueQuery(database, driver, table string) (string, error) {
 			WHERE
     			(TABLE_NAME = '%v')`
 		return fmt.Sprintf(query, table), nil
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		query := `
 		PRAGMA INDEX_LIST('%v');`
 		return fmt.Sprintf(query, table), nil
 	default:
-		return "", errors.New(s.DriverNotSupport)
+		return "", errors.New(d.NotSupport)
 	}
 }
 
 func ListCompositeKeyQuery(database, driver, table string) (string, error) { //TODO: get composite keys for other databases
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `
 			SELECT 
     			COLUMN_NAME as 'column'
@@ -98,7 +98,7 @@ func ListCompositeKeyQuery(database, driver, table string) (string, error) { //T
 					AND table_name = '%v'
 					AND constraint_name = 'PRIMARY';`
 		return fmt.Sprintf(query, database, table), nil
-	case s.DriverMssql:
+	case d.Mssql:
 		query := `
 			SELECT K.COLUMN_NAME 'column'
 			FROM     INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS K INNER JOIN
@@ -106,14 +106,14 @@ func ListCompositeKeyQuery(database, driver, table string) (string, error) { //T
 			WHERE  (TC.CONSTRAINT_TYPE = 'PRIMARY KEY') AND (K.TABLE_NAME = '%v')`
 		return fmt.Sprintf(query, table), nil
 	default:
-		return "", errors.New(s.DriverNotSupport)
+		return "", errors.New(d.NotSupport)
 	}
 }
 
 func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 	query := ""
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query = `
 			SELECT 
 				K.COLUMN_NAME as 'column'
@@ -129,7 +129,7 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 					AND K.TABLE_NAME = '%v'
 					AND C.CONSTRAINT_TYPE = 'PRIMARY KEY'`
 		return fmt.Sprintf(query, database, table), nil
-	case s.DriverPostgres:
+	case d.Postgres:
 		query := `
 		SELECT 
 			kc.column_name as column
@@ -145,18 +145,18 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 				AND tc.table_name = '%v'
 		ORDER BY tc.table_schema , tc.table_name, kc.position_in_unique_constraint;`
 		return fmt.Sprintf(query, table), nil
-	case s.DriverMssql:
+	case d.Mssql:
 		query = `
 			SELECT K.COLUMN_NAME 'column'
 			FROM     INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS K INNER JOIN
                      INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC ON K.TABLE_CATALOG = TC.TABLE_CATALOG AND K.TABLE_SCHEMA = TC.TABLE_SCHEMA AND K.CONSTRAINT_NAME = TC.CONSTRAINT_NAME
 			WHERE  (TC.CONSTRAINT_TYPE = 'PRIMARY KEY') AND (K.TABLE_NAME = '%v')`
 		return fmt.Sprintf(query, table), nil
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		query := `
 		select name as 'column' from pragma_table_info('%v') as 'p' where p.pk = TRUE`
 		return fmt.Sprintf(query, table), nil
-	case s.DriverOracle:
+	case d.Oracle:
 		query := `
 		SELECT
 		all_cons_columns.table_name AS "table",
@@ -181,7 +181,7 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 
 func ListReferenceQuery(database, driver, table string) (string, error) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `
 		SELECT
 			TABLE_NAME as 'table',
@@ -196,7 +196,7 @@ func ListReferenceQuery(database, driver, table string) (string, error) {
         	AND referenced_table_name IS NOT NULL
         	AND referenced_column_name IS NOT NULL`
 		return fmt.Sprintf(query, database), nil
-	case s.DriverPostgres:
+	case d.Postgres:
 		return `
 		SELECT
 			TC.TABLE_NAME AS table,
@@ -209,7 +209,7 @@ func ListReferenceQuery(database, driver, table string) (string, error) {
 		JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS CCU ON CCU.CONSTRAINT_NAME = TC.CONSTRAINT_NAME
 		AND CCU.TABLE_SCHEMA = TC.TABLE_SCHEMA
 		WHERE TC.CONSTRAINT_TYPE = 'FOREIGN KEY';`, nil
-	case s.DriverMssql:
+	case d.Mssql:
 		return `
 		SELECT tp.name AS 'table', cp.name AS 'column', tr.name AS 'referenced_table', cr.name AS 'referenced_column'
 		FROM     sys.foreign_keys AS fk INNER JOIN
@@ -219,10 +219,10 @@ func ListReferenceQuery(database, driver, table string) (string, error) {
                   sys.columns AS cp ON fkc.parent_column_id = cp.column_id AND fkc.parent_object_id = cp.object_id INNER JOIN
                   sys.columns AS cr ON fkc.referenced_column_id = cr.column_id AND fkc.referenced_object_id = cr.object_id
 		ORDER BY 'table'`, nil
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		return `
 		SELECT * FROM sqlite_master WHERE type = 'table' AND sql LIKE '%FOREIGN KEY%'`, nil
-	case s.DriverOracle:
+	case d.Oracle:
 		query := `
 		SELECT
 			b.table_name AS "table",
@@ -242,6 +242,6 @@ func ListReferenceQuery(database, driver, table string) (string, error) {
 			AND a.table_name = '%v'`
 		return fmt.Sprintf(query, table), nil
 	default:
-		return "", errors.New(s.DriverNotSupport)
+		return "", errors.New(d.NotSupport)
 	}
 }

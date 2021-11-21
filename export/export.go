@@ -9,12 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	s "github.com/core-go/sql"
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
+	d "github.com/go-generator/core/driver"
 	gdb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/query"
 	"github.com/go-generator/core/export/relationship"
+	s "github.com/go-generator/core/export/sql"
 	st "github.com/go-generator/core/strings"
 )
 
@@ -120,7 +121,7 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb.TableInfo, primaryKeys map[string][]string) error {
 	query := ""
 	switch s.GetDriver(db) {
-	case s.DriverMysql:
+	case d.Mysql:
 		query = `
 			SELECT 
 				TABLE_NAME AS 'table',
@@ -135,7 +136,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 				TABLE_SCHEMA = '%v'
 					AND TABLE_NAME = '%v'`
 		query = fmt.Sprintf(query, database, table)
-	case s.DriverPostgres:
+	case d.Postgres:
 		query := `
 			SELECT TABLE_NAME AS TABLE,
 				COLUMN_NAME,
@@ -145,7 +146,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			FROM INFORMATION_SCHEMA.COLUMNS
 			WHERE TABLE_NAME = '%v';`
 		query = fmt.Sprintf(query, table)
-	case s.DriverMssql:
+	case d.Mssql:
 		query = `
 			SELECT 
     			TABLE_NAME AS 'table',
@@ -158,7 +159,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			WHERE
 				TABLE_NAME = '%v'`
 		query = fmt.Sprintf(query, table)
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		query := `
 		select name as 'column_name', type, pk as 'column_key' from pragma_table_info('%v');`
 		query = fmt.Sprintf(query, table)
@@ -176,7 +177,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		}
 		sqlitePKMap(st, notNull)
 		return nil
-	case s.DriverOracle:
+	case d.Oracle:
 		query = `
 			SELECT
 				col.owner AS "schema_name",

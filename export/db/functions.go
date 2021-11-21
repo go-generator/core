@@ -11,8 +11,9 @@ import (
 	"strings"
 	"unicode"
 
-	s "github.com/core-go/sql"
+	d "github.com/go-generator/core/driver"
 	"github.com/go-generator/core/export/query"
+	s "github.com/go-generator/core/export/sql"
 )
 
 var (
@@ -60,7 +61,7 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]string, err
 
 func buildTableQuery(database, driver string) (string, error) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		query := `
 		SELECT 
     		TABLE_NAME AS 'table'
@@ -69,7 +70,7 @@ func buildTableQuery(database, driver string) (string, error) {
 		WHERE
     		table_schema = '%v'`
 		return fmt.Sprintf(query, database), nil
-	case s.DriverPostgres:
+	case d.Postgres:
 		return `
 		SELECT 
     		table_name as table
