@@ -191,8 +191,11 @@ func Generate(
 	return outputFile, err
 }
 func IsEmpty(text string) bool {
-	if len(text) < 20 {
-		if len(strings.TrimSpace(text)) == 0 {
+	if len(text) < 40 {
+		c := strings.Replace(text, "\n", "", -1)
+		c = strings.Replace(c, "\r", "", -1)
+		c = strings.Replace(c, "\t", "", -1)
+		if len(strings.TrimSpace(c)) == 0 {
 			return true
 		}
 	}
