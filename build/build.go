@@ -30,6 +30,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 	collection["table"] = strings.ToLower(table)
 	collection["TABLE"] = strings.ToUpper(table)
 	collection["source"] = src
+	collection["tsIdImport"] = ""
 	collection["tsId"] = "string"
 	collection["ts_date"] = ""
 	collection["ts_number"] = ""
@@ -183,6 +184,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			collection["tsFilterImport"] = "import { Filter } from 'onecore';"
 		}
 		if ck > 1 {
+			collection["keys"] = true
+			collection["tsIdImport"] = ", " + names["Name"] + "Id"
 			collection["tsId"] = "" + names["Name"] + "Id"
 			collection["javaId"] = "" + names["Name"] + "Id"
 			collection["csId"] = "" + names["Name"] + "Id"
