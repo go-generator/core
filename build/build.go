@@ -29,6 +29,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 	collection["table"] = table
 	collection["source"] = src
 	collection["tsId"] = "string"
+	collection["ts_date"] = ""
+	collection["ts_number"] = ""
 	collection["goId"] = "string"
 	collection["javaId"] = "String"
 	collection["csId"] = "string"
@@ -53,6 +55,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			MergeMap(sub, tmp)
 			x := f.Type
 			if re.MatchString(x) {
+				collection["ts_date"] = "DateRange, "
 				hasTime = true
 			}
 			sub["simpleTypes"] = f.Type
@@ -68,6 +71,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			if ok2 {
 				if jt == "number" || jt == "integer" {
 					hasNumber = true
+					collection["ts_number"] = "NumberRange, "
 				}
 				sub["jstype"] = jt
 			} else {
@@ -136,15 +140,6 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			} else {
 				sub["bson"] = f.Name + ",omitempty"
 			}
-			/*
-				"int8":      "int8",
-					"int16":     "int16",
-					"int32":     "int32",
-					"int64":     "int64",
-					"float32":   "float32",
-					"float64":   "float64",
-					"decimal":   "float64",
-			*/
 			if ut == "float64" || ut == "decimal" || ut == "float32" {
 				if f.Scale != nil && *f.Scale > 0 {
 					sub["scale"] = *f.Scale
@@ -184,9 +179,9 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			collection["tsFilterImport"] = "import { Filter } from 'onecore';"
 		}
 		if ck > 1 {
-			collection["tsId"] = "any"
-			collection["javaId"] = names["Table"] + "Id"
-			collection["csId"] = names["Table"] + "Id"
+			collection["tsId"] = "" + names["Name"] + "Id"
+			collection["javaId"] = "" + names["Name"] + "Id"
+			collection["csId"] = "" + names["Name"] + "Id"
 			collection["goId"] = "interface{}"
 			collection["goBsonId"] = "-"
 			collection["goGetId"] = "GetId"
