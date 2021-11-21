@@ -191,10 +191,50 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 		entity := Entity{Model: m, Params: model}
 		entities = append(entities, entity)
 		collections = append(collections, model)
+		if m.Ones != nil && len(m.Ones) > 0 {
+			var ones []map[string]interface{}
+			for _, c := range m.Ones {
+				s := GetModel(project.Models, c.Model)
+				if s != nil {
+					sub := buildModel(*s, project.Types, env)
+					ones = append(ones, sub)
+				}
+			}
+			model["ones"] = ones
+		}
+		if m.Models != nil && len(m.Models) > 0 {
+			var models []map[string]interface{}
+			for _, c := range m.Models {
+				s := GetModel(project.Models, c.Model)
+				if s != nil {
+					sub := buildModel(*s, project.Types, env)
+					models = append(models, sub)
+				}
+			}
+			model["models"] = models
+		}
+		if m.Arrays != nil && len(m.Arrays) > 0 {
+			var arrays []map[string]interface{}
+			for _, c := range m.Arrays {
+				s := GetModel(project.Models, c.Model)
+				if s != nil {
+					sub := buildModel(*s, project.Types, env)
+					arrays = append(arrays, sub)
+				}
+			}
+			model["arrays"] = arrays
+		}
 	}
 	return entities, collections
 }
-
+func GetModel(models []metadata.Model, name string) *metadata.Model {
+	for _, m := range models {
+		if m.Name == name {
+			return &m
+		}
+	}
+	return nil
+}
 func ParseEnv(env map[string]string) map[string]interface{} {
 	res := make(map[string]interface{}, 0)
 	res["layer"] = false
