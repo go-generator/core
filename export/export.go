@@ -53,43 +53,43 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		if v.ColumnKey == "PRI" {
 			f.Key = true
 		}
-		rl := getRelationship(v.Column, rt)
-		if rl != nil {
-			var rls metadata.Relationship
-			var foreign metadata.Field
-			tmpMap := generator.BuildNames(rl.Table)
-			foreign.Name = tmpMap["Name"]
-			foreign.Source = tmpMap["name"]
-			foreign.Type = "*[]" + tmpMap["Name"]
-			if rl.Relationship == relationship.ManyToOne && table == rl.ReferencedTable { // have Many to One relation, add a field to the current struct
-				rls.Ref = rl.Table
-				rls.Fields = append(rls.Fields, metadata.Link{
-					Column: rl.Column,
-					To:     rl.ReferencedColumn,
-				})
-				if m.Arrays == nil {
-					m.Arrays = append(m.Arrays, rls)
-				} else {
-					for j := range m.Arrays {
-						if m.Arrays[j].Ref == rls.Ref {
-							m.Arrays[j].Fields = append(m.Arrays[j].Fields, rls.Fields...)
-							break
-						}
-						if j == len(m.Arrays)-1 {
-							m.Arrays = append(m.Arrays, rls)
-						}
-					}
-				}
-				for i := range m.Fields {
-					if m.Fields[i] == foreign {
-						break
-					}
-					if i == len(m.Fields)-1 {
-						m.Fields = append(m.Fields, foreign)
-					}
-				}
-			}
-		}
+		//rl := getRelationship(v.Column, rt)
+		//if rl != nil {
+		//	var rls metadata.Relationship
+		//	var foreign metadata.Field
+		//	tmpMap := generator.BuildNames(rl.Table)
+		//	foreign.Name = tmpMap["Name"]
+		//	foreign.Source = tmpMap["name"]
+		//	foreign.Type = "*[]" + tmpMap["Name"]
+		//	if rl.Relationship == relationship.ManyToOne && table == rl.ReferencedTable { // have Many to One relation, add a field to the current struct
+		//		rls.Ref = rl.Table
+		//		rls.Fields = append(rls.Fields, metadata.Link{
+		//			Column: rl.Column,
+		//			To:     rl.ReferencedColumn,
+		//		})
+		//		if m.Arrays == nil {
+		//			m.Arrays = append(m.Arrays, rls)
+		//		} else {
+		//			for j := range m.Arrays {
+		//				if m.Arrays[j].Ref == rls.Ref {
+		//					m.Arrays[j].Fields = append(m.Arrays[j].Fields, rls.Fields...)
+		//					break
+		//				}
+		//				if j == len(m.Arrays)-1 {
+		//					m.Arrays = append(m.Arrays, rls)
+		//				}
+		//			}
+		//		}
+		//		for i := range m.Fields {
+		//			if m.Fields[i] == foreign {
+		//				break
+		//			}
+		//			if i == len(m.Fields)-1 {
+		//				m.Fields = append(m.Fields, foreign)
+		//			}
+		//		}
+		//	}
+		//}
 		m.Fields = append(m.Fields, f)
 	}
 	return &m, nil
@@ -227,6 +227,9 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 				st.Fields[i].ColumnKey = "PRI"
 			}
 			re := regexp.MustCompile(`\d+`)
+			if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
+				st.Fields[i].DataType = "NUMERIC"
+			}
 			if strings.Contains(st.Fields[i].DataType, "VARCHAR") {
 				st.Fields[i].Length = sql.NullString{
 					String: re.FindString(st.Fields[i].DataType),

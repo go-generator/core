@@ -9,7 +9,15 @@ import (
 	"text/template"
 )
 
-func Generate(project metadata.Project, templates map[string]string, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...func(map[string]string) map[string]interface{}) ([]metadata.File, error) {
+func Generate(
+	project metadata.Project,
+	templates map[string]string,
+	funcMap template.FuncMap,
+	buildModel func(m metadata.Model, types map[string]string,
+		env map[string]interface{}) map[string]interface{},
+	options ...func(map[string]string) map[string]interface{},
+) ([]metadata.File, error) {
+
 	var outputFile []metadata.File
 	var err error
 	pathSeparator := string(os.PathSeparator)
@@ -24,12 +32,12 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 	for _, v := range project.Statics {
 		m := make(map[string]interface{}, 0)
 		m["env"] = env
-		v.File, err = parsing(v.File, m, "static_"+v.Name)
+		v.File, err = parsing(v.File, m, "static_"+v.Name, funcMap)
 		if err != nil {
 			return nil, fmt.Errorf("generating static file error: %w", err)
 		}
 		if s, ok := templates[v.Name]; ok {
-			text, err1 := parsing(s, m, "static_"+v.Name)
+			text, err1 := parsing(s, m, "static_"+v.Name, funcMap)
 			if err1 != nil {
 				return nil, fmt.Errorf("generating static file content error: %w", err1)
 			}
@@ -49,11 +57,11 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 		m["env"] = env
 		m["collections"] = collections
 		if str, ok := templates[a.Name]; ok {
-			text, err2 := parsing(str, m, "array_"+a.Name)
+			text, err2 := parsing(str, m, "array_"+a.Name, funcMap)
 			if err2 != nil {
 				return nil, fmt.Errorf("generating model file error: %w", err2)
 			}
-			entityPath, err3 := generateFilePath(a.File, m)
+			entityPath, err3 := generateFilePath(a.File, m, funcMap)
 			if err3 != nil {
 				return nil, fmt.Errorf("generating file path error: %w", err3)
 			}
@@ -77,11 +85,11 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 	for _, e := range project.Entities {
 		for _, v := range collections {
 			if str, ok := templates[e.Name]; ok {
-				text, err2 := parsing(str, v, "entity_"+e.Name)
+				text, err2 := parsing(str, v, "entity_"+e.Name, funcMap)
 				if err2 != nil {
 					return nil, fmt.Errorf("generating model file error: %w", err2)
 				}
-				entityPath, err3 := generateFilePath(e.File, v)
+				entityPath, err3 := generateFilePath(e.File, v, funcMap)
 				if err3 != nil {
 					return nil, fmt.Errorf("generating file path error: %w", err3)
 				}
@@ -105,9 +113,9 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 	}
 	return outputFile, err
 }
-func parsing(t string, m map[string]interface{}, name string) (string, error) {
+func parsing(t string, m map[string]interface{}, name string, funcMap template.FuncMap) (string, error) {
 	strBld := &strings.Builder{}
-	tmp, err := template.New(name).Parse(t)
+	tmp, err := template.New(name).Funcs(funcMap).Parse(t)
 	if err != nil {
 		return "", err
 	}
@@ -117,9 +125,9 @@ func parsing(t string, m map[string]interface{}, name string) (string, error) {
 	}
 	return strBld.String(), err
 }
-func generateFilePath(path string, m map[string]interface{}) (string, error) {
+func generateFilePath(path string, m map[string]interface{}, funcMap template.FuncMap) (string, error) {
 	strBld := strings.Builder{}
-	tmp, err := template.New(path).Parse(path)
+	tmp, err := template.New(path).Funcs(funcMap).Parse(path)
 	if err != nil {
 		return "", err
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-generator/core"
 	"strings"
+	"text/template"
 )
 
 func ToString(files []metadata.File) (string, error) {
@@ -15,19 +16,24 @@ func ToString(files []metadata.File) (string, error) {
 	}
 	return string(file), err
 }
-func ToOutput(path, directory string, input metadata.Project, templateMap map[string]string, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
+func ToOutput(path, directory string,
+	input metadata.Project,
+	templateMap map[string]string,
+	buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
+	funcMap template.FuncMap,
+) (metadata.Output, error) {
 	var output metadata.Output
 	output.Path = path
 	output.Directory = directory
 	output.Path = strings.TrimSuffix(output.Path, "/")
-	outputFiles, err := Generate(input, templateMap, buildModel)
+	outputFiles, err := Generate(input, templateMap, funcMap, buildModel)
 	if err != nil {
 		return output, fmt.Errorf("error generating data: %w", err)
 	}
 	output.Files = outputFiles
 	return output, err
 }
-func GenerateFromFile(projTmpl map[string]map[string]string, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
+func GenerateFromFile(funcMap template.FuncMap, projTmpl map[string]map[string]string, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
 	var output metadata.Output
 	input, err := loadProject(projectMetadata)
 	if err != nil {
@@ -35,7 +41,7 @@ func GenerateFromFile(projTmpl map[string]map[string]string, projectName, projec
 	}
 	input.Env = initEnv(input.Env, projectName)
 	templateMap := projTmpl[input.Language]
-	output, err = ToOutput("", projectName, input, templateMap, buildModel)
+	output, err = ToOutput("", projectName, input, templateMap, buildModel, funcMap)
 	if err != nil {
 		return output, err
 	}
@@ -67,7 +73,7 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	return input, err
 }
 
-func LoadProject(projectTemplateName, projectName string, templates map[string]string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
+func ExportProject(projectTemplateName, projectName string, templates map[string]string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
 	if data, ok := templates[projectTemplateName]; ok {
 		pr, err := DecodeProject([]byte(data), projectName, initEnv, m)
 		if err != nil {
@@ -78,6 +84,6 @@ func LoadProject(projectTemplateName, projectName string, templates map[string]s
 	return nil, nil
 }
 
-func ExportProject(templates map[string]string, projectTemplateName, projectName string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
-	return LoadProject(projectTemplateName, projectName, templates, m, initEnv)
-}
+//func ExportProject(templates map[string]string, projectTemplateName, projectName string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
+//	return LoadProject(projectTemplateName, projectName, templates, m, initEnv)
+//}

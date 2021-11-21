@@ -43,6 +43,21 @@ func SelectDSN(dbCache metadata.Database, driver string) string {
 	}
 }
 
+func UpdateDBCache(dbCache *metadata.Database, driver, dsn string) {
+	switch driver {
+	case s.DriverMysql:
+		dbCache.MySql = dsn
+	case s.DriverPostgres:
+		dbCache.Postgres = dsn
+	case s.DriverMssql:
+		dbCache.Mssql = dsn
+	case s.DriverSqlite3:
+		dbCache.Sqlite3 = dsn
+	case s.DriverOracle:
+		dbCache.Oracle = dsn
+	}
+}
+
 func GetDatabaseName(dbCache metadata.Database, driver string) (string, error) {
 	switch driver {
 	case s.DriverMysql:

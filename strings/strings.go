@@ -1,6 +1,9 @@
 package strings
 
-import "strings"
+import (
+	"strings"
+	"text/template"
+)
 
 var ends = []string{"ies", "ees", "ses", "xes", "zes", "shes", "ches", "aes", "oes", "ues"}
 var replaces = []string{"y", "ee", "s", "x", "z", "sh", "ch", "ae", "oe", "ue"}
@@ -13,16 +16,16 @@ func ToSingular(s string) string {
 	}
 	for i, si := range plural {
 		if strings.HasSuffix(s, si) {
-			return s[0:len(s) - len (si)] + singular[i]
+			return s[0:len(s)-len(si)] + singular[i]
 		}
 	}
 	for i, si := range ends {
 		if strings.HasSuffix(s, si) {
-			return s[0:len(s) - len (si)] + replaces[i]
+			return s[0:len(s)-len(si)] + replaces[i]
 		}
 	}
 	if strings.HasSuffix(s, "s") {
-		return s[0: len(s) - 1]
+		return s[0 : len(s)-1]
 	}
 	return s
 }
@@ -32,12 +35,12 @@ func ToPlural(s string) string {
 	}
 	for i, si := range singular {
 		if strings.HasSuffix(s, si) {
-			return s[0:len(s) - len (si)] + plural[i]
+			return s[0:len(s)-len(si)] + plural[i]
 		}
 	}
-	x := s[len(s) - 1:]
+	x := s[len(s)-1:]
 	if x == "y" {
-		return s[0: len(s) - 1] + "ies"
+		return s[0:len(s)-1] + "ies"
 	}
 	if x == "s" || x == "x" || strings.HasSuffix(s, "sh") || strings.HasSuffix(s, "ch") {
 		return s[0:] + "es"
@@ -71,4 +74,17 @@ func UnBuildSnakeName(s string) string {
 		}
 	}
 	return s1
+}
+
+func MakeFuncMap() template.FuncMap {
+	funcMap := make(template.FuncMap, 0)
+
+	funcMap["lower"] = strings.ToLower
+	funcMap["upper"] = strings.ToUpper
+	funcMap["snake"] = BuildSnakeName
+	funcMap["unsnake"] = UnBuildSnakeName
+	funcMap["plural"] = ToPlural
+	funcMap["singular"] = ToSingular
+
+	return funcMap
 }

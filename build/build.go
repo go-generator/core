@@ -5,6 +5,7 @@ import (
 	"github.com/go-generator/core/generator"
 	"github.com/go-generator/core/jstypes"
 	st "github.com/go-generator/core/strings"
+	"regexp"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ func MergeMap(m map[string]interface{}, sub map[string]string) {
 	}
 }
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
+	var re = regexp.MustCompile(`date|datetime`)
 	names := generator.BuildNames(m.Name, st.ToPlural)
 	collection := make(map[string]interface{}, 0)
 	MergeMap(collection, names)
@@ -51,7 +53,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			tmp := generator.BuildNames(f.Name)
 			MergeMap(sub, tmp)
 			x := f.Type
-			if x == "date" || x == "datetime" {
+			if re.MatchString(x) {
 				hasTime = true
 			}
 			sub["simpleTypes"] = f.Type
@@ -83,12 +85,12 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["column"] = column
 			sub["length"] = f.Length
 			sub["env"] = env
-			if x == "datedate" || x == "date" {
+			if re.MatchString(x) {
 				sub["goFilterType"] = "*TimeRange"
 				sub["tsFilterType"] = "Date|DateRange"
 				sub["javaFilterType"] = "DateRange"
 				sub["csFilterType"] = "DateTimeRange"
-			} else if x == "float64" || x == "decimal" || x == "float64[]" || x == "decimal[]"{
+			} else if x == "float64" || x == "decimal" || x == "float64[]" || x == "decimal[]" {
 				sub["goFilterType"] = "*NumberRange"
 				sub["tsFilterType"] = "number|NumberRange"
 				sub["javaFilterType"] = "NumberRange"
