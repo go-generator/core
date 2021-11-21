@@ -7,12 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/core-go/cipher"
 	s "github.com/core-go/sql"
-	"github.com/go-generator/core"
 	"github.com/go-generator/core/display"
 	"github.com/go-generator/core/export"
 	edb "github.com/go-generator/core/export/db"
@@ -20,7 +18,6 @@ import (
 	"github.com/go-generator/core/generator"
 	"github.com/go-generator/core/io"
 	"github.com/sqweek/dialog"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -108,7 +105,7 @@ func ValidateDatabaseConfig(dc metadata.DatabaseConfig) error {
 	return err
 }
 
-func RunWithUI(ctx context.Context, app fyne.App, size fyne.Size, types map[string]string, projectTmpl, prTmplName, projectName string, dbCache metadata.Database, authType string) error {
+func RunWithUI(ctx context.Context, size fyne.Size, types map[string]string, prTmplName, projectName string, dbCache metadata.Database, authType string, templates map[string]string) error {
 	var dbConfig metadata.DatabaseConfig
 	outer := make(map[string]string, 0)
 	encryptField := "password"
@@ -125,7 +122,7 @@ func RunWithUI(ctx context.Context, app fyne.App, size fyne.Size, types map[stri
 	if fs.Size() != 0 { // Check if configs file is empty
 		err = cipher.Read(cacheFile, outer, encryptField, "")
 		if err != nil {
-			display.ShowErrorWindows(app, err, size)
+			display.ShowErrorWindows(fyne.CurrentApp(), err, size)
 		}
 	}
 	port, err := strconv.ParseInt(outer["port"], 10, 64)
@@ -140,11 +137,11 @@ func RunWithUI(ctx context.Context, app fyne.App, size fyne.Size, types map[stri
 		User:     outer["user"],
 		Password: outer["password"],
 	}
-	err = DriverInputUI(ctx, dbConfig, app, projectTmpl, prTmplName, projectName, encryptField, size, types, dbCache, authType)
+	err = DriverInputUI(ctx, dbConfig, fyne.CurrentApp(), prTmplName, projectName, encryptField, size, types, dbCache, authType, templates)
 	return err
 }
 
-func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App, projectTmpl, prTmplName, projectName, encryptField string, size fyne.Size, types map[string]string, dbCache metadata.Database, authType string) error {
+func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App, prTmplName, projectName, encryptField string, size fyne.Size, types map[string]string, dbCache metadata.Database, authType string, templates map[string]string) error {
 	oldCache := dbCache
 	driverEntry := widget.NewRadioGroup([]string{s.DriverMysql, s.DriverPostgres, s.DriverMssql, s.DriverSqlite3}, func(s string) {
 		dc.Driver = s
@@ -299,7 +296,8 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 				return
 			}
 		} else {
-			prj, err = generator.ExportProject(projectTmpl, io.Load, prTmplName, projectName, toModels, generator.InitEnv)
+
+			prj, err = generator.ExportProject(templates, prTmplName, projectName, toModels, generator.InitEnv)
 			if err != nil {
 				display.ShowErrorWindows(app, err, size)
 				return
@@ -349,26 +347,8 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 			display.ShowErrorWindows(app, err, size)
 			return
 		}
-		//if optimize {
-		//	err = project.SaveModels(toModels, outFile)
-		//	if err != nil {
-		//		display.ShowErrorWindows(app, err, size)
-		//		return
-		//	}
-		//} else {
-		//	pr, err := export.ToProject(projectTmpl, prTmplName, projectName, toModels)
-		//	if err != nil {
-		//		display.ShowErrorWindows(app, err, size)
-		//		return
-		//	}
-		//	err = project.SaveProject(*pr, outFile)
-		//	if err != nil {
-		//		display.ShowErrorWindows(app, err, size)
-		//		return
-		//	}
-		//}
 	})
-	codeWidows := app.NewWindow("Generated Code")
+	codeWidows := fyne.CurrentApp().NewWindow("Generated Code")
 	codeWidows.Resize(display.ResizeWindows(15, 20, size))
 	codeWidows.SetContent(container.NewBorder(nil, saveProject, nil, nil, container.NewScroll(codeEntry)))
 	codeWidows.Show()

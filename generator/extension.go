@@ -27,17 +27,14 @@ func ToOutput(path, directory string, input metadata.Project, templateMap map[st
 	output.Files = outputFiles
 	return output, err
 }
-func GenerateFromFile(templateDir, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), loadTemplates func(string) (map[string]string, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
+func GenerateFromFile(projTmpl map[string]map[string]string, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
 	var output metadata.Output
 	input, err := loadProject(projectMetadata)
 	if err != nil {
 		return output, err
 	}
 	input.Env = initEnv(input.Env, projectName)
-	templateMap, err := loadTemplates(templateDir)
-	if err != nil {
-		return output, err
-	}
+	templateMap := projTmpl[input.Language]
 	output, err = ToOutput("", projectName, input, templateMap, buildModel)
 	if err != nil {
 		return output, err
@@ -45,6 +42,7 @@ func GenerateFromFile(templateDir, projectName, projectMetadata string, loadProj
 	output.Directory = projectName
 	return output, nil
 }
+
 func GenerateFromString(projectName, jsonInput string, initEnv func(map[string]string, string) map[string]string) error {
 	input, err := DecodeProject([]byte(jsonInput), projectName, initEnv)
 	if err != nil {
@@ -53,7 +51,8 @@ func GenerateFromString(projectName, jsonInput string, initEnv func(map[string]s
 	input.Env = initEnv(input.Env, projectName)
 	return nil
 }
-func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string]string, string) map[string]string, models...[]metadata.Model) (metadata.Project, error) {
+
+func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string]string, string) map[string]string, models ...[]metadata.Model) (metadata.Project, error) {
 	var input metadata.Project
 	err := json.NewDecoder(bytes.NewBuffer(byteValue)).Decode(&input)
 	if err != nil {
@@ -67,6 +66,7 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	}
 	return input, err
 }
+
 func LoadProject(projectTemplateName, projectName string, templates map[string]string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
 	if data, ok := templates[projectTemplateName]; ok {
 		pr, err := DecodeProject([]byte(data), projectName, initEnv, m)
@@ -77,10 +77,7 @@ func LoadProject(projectTemplateName, projectName string, templates map[string]s
 	}
 	return nil, nil
 }
-func ExportProject(container string, load func(string) (map[string]string, error), projectTemplateName, projectName string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
-	templates, err := load(container)
-	if err != nil {
-		return nil, err
-	}
+
+func ExportProject(templates map[string]string, projectTemplateName, projectName string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
 	return LoadProject(projectTemplateName, projectName, templates, m, initEnv)
 }
