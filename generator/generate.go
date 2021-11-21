@@ -33,6 +33,14 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 			if err1 != nil {
 				return nil, fmt.Errorf("generating static file content error: %w", err1)
 			}
+			if v.Replace {
+				if strings.Contains(text, "{|") {
+					text = strings.Replace(text, "{|", "{", -1)
+				}
+				if strings.Contains(text, "|}") {
+					text = strings.Replace(text, "|}", "}", -1)
+				}
+			}
 			outputFile = append(outputFile, metadata.File{Name: v.File, Content: text})
 		}
 	}
@@ -50,6 +58,14 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 				return nil, fmt.Errorf("generating file path error: %w", err3)
 			}
 			entityPath = strings.ReplaceAll(entityPath, "/", pathSeparator)
+			if a.Replace {
+				if strings.Contains(text, "{|") {
+					text = strings.Replace(text, "{|", "{", -1)
+				}
+				if strings.Contains(text, "|}") {
+					text = strings.Replace(text, "|}", "}", -1)
+				}
+			}
 			outputFile = append(outputFile, metadata.File{
 				Name:    entityPath,
 				Content: text,
@@ -70,6 +86,14 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 					return nil, fmt.Errorf("generating file path error: %w", err3)
 				}
 				entityPath = strings.ReplaceAll(entityPath, "/", pathSeparator)
+				if e.Replace {
+					if strings.Contains(text, "{|") {
+						text = strings.Replace(text, "{|", "{", -1)
+					}
+					if strings.Contains(text, "|}") {
+						text = strings.Replace(text, "|}", "}", -1)
+					}
+				}
 				outputFile = append(outputFile, metadata.File{
 					Name:    entityPath,
 					Content: text,
@@ -81,9 +105,9 @@ func Generate(project metadata.Project, templates map[string]string, buildModel 
 	}
 	return outputFile, err
 }
-func parsing(tmpl string, m map[string]interface{}, templateName string) (string, error) {
+func parsing(t string, m map[string]interface{}, name string) (string, error) {
 	strBld := &strings.Builder{}
-	tmp, err := template.New(templateName).Parse(tmpl)
+	tmp, err := template.New(name).Parse(t)
 	if err != nil {
 		return "", err
 	}
