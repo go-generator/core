@@ -65,11 +65,16 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		goIds := make([]string, 0)
 		tsIds := make([]string, 0)
 		fields := make([]map[string]interface{}, 0)
+		hasTime := false
+		hasNumber := false
 		for _, f := range m.Fields {
 			sub := make(map[string]interface{}, 0)
 			tmp := generator.BuildNames(f.Name)
 			MergeMap(sub, tmp)
 			x := f.Type
+			if x == "date" || x == "datetime" {
+				hasTime = true
+			}
 			sub["simpleTypes"] = f.Type
 			t, ok := types[f.Type]
 			if ok && len(t) > 0 {
@@ -79,6 +84,9 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			}
 			jt, ok2 := JSTypes[f.Type]
 			if ok2 {
+				if jt == "number" || jt == "integer" {
+					hasNumber = true
+				}
 				sub["jstype"] = jt
 			} else {
 				sub["jstype"] = f.Type
@@ -142,6 +150,17 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				tsIds = append(tsIds, ":"+tmp["name"])
 			}
 			fields = append(fields, sub)
+		}
+		collection["time"] = hasTime
+		collection["number"] = hasNumber
+		if hasTime && hasNumber {
+			collection["tsFilterImport"] = "import { DateRange, Filter, NumberRange } from 'onecore';"
+		} else if hasTime {
+			collection["tsFilterImport"] = "import { DateRange, Filter } from 'onecore';"
+		} else if hasNumber {
+			collection["tsFilterImport"] = "import { Filter, NumberRange } from 'onecore';"
+		} else {
+			collection["tsFilterImport"] = "import { Filter } from 'onecore';"
 		}
 		if ck > 1 {
 			collection["tsId"] = "any"
