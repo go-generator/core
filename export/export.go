@@ -41,11 +41,28 @@ func init() {
 		panic(err)
 	}
 }
-
-func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []gdb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+func Trim(s string, prefix, suffix string) string {
+	if len(prefix) > 0 {
+		s = s[len(prefix):]
+	}
+	if len(suffix) > 0 {
+		s = s[:len(s) - len(suffix)]
+	}
+	return s
+}
+func ToModel(types map[string]string, table string, rt []relationship.RelTables, sqlTable []gdb.TableFields, options...string) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
 	pluralize := pluralize.NewClient()
 	origin := table
 	table = strings.ToLower(table)
+	prefix := ""
+	suffix := ""
+	if len(options) > 0 {
+		prefix = options[0]
+	}
+	if len(options) > 1 {
+		suffix = options[1]
+	}
+	table = Trim(table, prefix, suffix)
 	var m metadata.Model
 	var raw string
 	if !strings.Contains(table, "_") {
@@ -117,7 +134,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	return &m, nil
 }
 
-func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]string) ([]metadata.Model, error) {
+func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]string, options...string) ([]metadata.Model, error) {
 	var projectModels []metadata.Model
 	for _, t := range tables {
 		var tablesData gdb.TableInfo
@@ -125,7 +142,7 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 		if err != nil {
 			return nil, err
 		}
-		m, err := ToModel(types, t, rt, tablesData.HasCompositeKey, tablesData.Fields)
+		m, err := ToModel(types, t, rt, tablesData.Fields, options...)
 		if err != nil {
 			return nil, err
 		}
