@@ -9,6 +9,7 @@ type DatabaseConfig struct {
 	User     string `mapstructure:"user" json:"user,omitempty" gorm:"column:user" bson:"user,omitempty" dynamodbav:"user,omitempty" firestore:"user,omitempty"`
 	Password string `mapstructure:"password" json:"password,omitempty" gorm:"column:password" bson:"password,omitempty" dynamodbav:"password,omitempty" firestore:"password,omitempty"`
 }
+
 type Database struct {
 	MySql    string `mapstructure:"mysql" json:"mysql,omitempty" gorm:"column:mysql" bson:"mysql,omitempty" dynamodbav:"mysql,omitempty" firestore:"mysql,omitempty"`
 	Postgres string `mapstructure:"postgres" json:"postgres,omitempty" gorm:"column:postgres" bson:"postgres,omitempty" dynamodbav:"postgres,omitempty" firestore:"postgres,omitempty"`

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/kbinani/screenshot"
 )
@@ -20,22 +19,14 @@ func GetActiveDisplaySize(index int) (int, int, error) {
 	return screen.Dx(), screen.Dy(), nil
 }
 
-func showPopUpWindows(app fyne.App, title, message string, displaySize fyne.Size, icon fyne.Resource) {
-	size := ResizeWindows(40, 30, displaySize)
-	wa := app.NewWindow(title)
-	if icon != nil {
-		wa.SetIcon(icon)
-	}
-	entry := widget.NewMultiLineEntry()
-	entry.Wrapping = fyne.TextWrapWord
-	entry.SetText(message)
-	vScroll := container.NewScroll(entry)
-	wa.SetContent(vScroll)
-	if !displaySize.IsZero() {
-		wa.Resize(size)
-	}
-	wa.CenterOnScreen()
-	wa.Show()
+func PopUpWindows(message string, c fyne.Canvas) {
+	var popup *widget.PopUp
+	popup = widget.NewModalPopUp(container.NewBorder(nil, widget.NewButton("Close", func() {
+		if popup != nil {
+			popup.Hide()
+		}
+	}), nil, nil, widget.NewLabel(message)), c)
+	popup.Show()
 }
 
 func ResizeWindows(wRatio, hRatio float32, size fyne.Size) fyne.Size {
@@ -43,29 +34,4 @@ func ResizeWindows(wRatio, hRatio float32, size fyne.Size) fyne.Size {
 		Width:  wRatio * size.Width / 100,
 		Height: hRatio * size.Height / 100,
 	}
-}
-
-func ShowErrorWindows(app fyne.App, err error, displaySize fyne.Size) {
-	//red := color.NRGBA{R: 255, G: 0, B: 0, A: 255}
-	showPopUpWindows(app, "Error", err.Error(), fyne.Size{}, theme.HomeIcon())
-}
-
-func ShowSuccessWindows(app fyne.App, message string, displaySize fyne.Size) {
-	//green := color.NRGBA{R: 0, G: 255, B: 0, A: 255}
-	showPopUpWindows(app, "Success", message, fyne.Size{}, theme.HomeIcon())
-}
-
-func ShowCodeWindows(app fyne.App, code string, displaySize fyne.Size) {
-	size := ResizeWindows(40, 30, displaySize)
-	wa := app.NewWindow("Generated Code")
-	entry := widget.NewMultiLineEntry()
-	entry.Wrapping = fyne.TextWrapWord
-	entry.SetText(code)
-	vScroll := container.NewScroll(entry)
-	wa.SetContent(vScroll)
-	if !displaySize.IsZero() {
-		wa.Resize(size)
-	}
-	wa.CenterOnScreen()
-	wa.Show()
 }
