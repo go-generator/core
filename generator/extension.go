@@ -3,10 +3,12 @@ package generator
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/go-generator/core"
 	"strings"
 	"text/template"
+
+	"github.com/go-generator/core"
 )
 
 func ToString(files []metadata.File) (string, error) {
@@ -80,8 +82,9 @@ func ExportProject(projectTemplateName, projectName string, templates map[string
 			return nil, err
 		}
 		return &pr, nil
+	} else {
+		return nil, errors.New("project template not found")
 	}
-	return nil, nil
 }
 
 //func ExportProject(templates map[string]string, projectTemplateName, projectName string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {

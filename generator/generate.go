@@ -3,15 +3,16 @@ package generator
 import (
 	"errors"
 	"fmt"
-	"github.com/go-generator/core"
-	"github.com/go-generator/core/build"
-	"github.com/go-generator/core/types"
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/go-generator/core"
+	"github.com/go-generator/core/build"
+	"github.com/go-generator/core/types"
 )
 
-func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, langTmpl map[string]map[string]string, options...map[string]map[string]string) ([]metadata.File, error) {
+func GenerateFiles(projectName, projectJson string, projectTemplate map[string]map[string]string, funcMap template.FuncMap, options ...map[string]map[string]string) ([]metadata.File, error) {
 	prj, err := DecodeProject([]byte(projectJson), projectName, build.InitEnv)
 	if err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, la
 			prj.Types = types.Types[prj.Language]
 		}
 	}
-	return Generate(prj, langTmpl[prj.Language], funcMap, build.BuildModel)
+	return Generate(prj, projectTemplate[prj.Language], funcMap, build.BuildModel)
 }
 func Generate(
 	project metadata.Project,
