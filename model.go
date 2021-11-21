@@ -6,7 +6,7 @@ type Model struct {
 	Table  string         `mapstructure:"table" json:"table,omitempty" gorm:"column:table" bson:"table,omitempty" dynamodbav:"table,omitempty" firestore:"table,omitempty"`
 	Alias  []TypeAlias    `mapstructure:"alias" json:"alias,omitempty" gorm:"column:alias" bson:"alias,omitempty" dynamodbav:"alias,omitempty" firestore:"alias,omitempty"`
 	Ones   []Relationship `mapstructure:"ones" json:"ones,omitempty" gorm:"column:ones" bson:"ones,omitempty" dynamodbav:"ones,omitempty" firestore:"ones,omitempty"`
-	Models []Relationship `mapstructure:"models" json:"models,omitempty" gorm:"column:models" bson:"models,omitempty" dynamodbav:"models,omitempty" firestore:"models,omitempty"`
-	Arrays []Relationship `mapstructure:"arrays" json:"arrays,omitempty" gorm:"column:arrays" bson:"arrays,omitempty" dynamodbav:"arrays,omitempty" firestore:"arrays,omitempty"`
+	Models []Relationship `mapstructure:"models" json:"models,omitempty" gorm:"column:models" bson:"models,omitempty" dynamodbav:"models,omitempty" firestore:"models,omitempty"` // many-to-one
+	Arrays []Relationship `mapstructure:"arrays" json:"arrays,omitempty" gorm:"column:arrays" bson:"arrays,omitempty" dynamodbav:"arrays,omitempty" firestore:"arrays,omitempty"` // one-to-many
 	Fields []Field        `mapstructure:"fields" json:"fields,omitempty" gorm:"column:fields" bson:"fields,omitempty" dynamodbav:"fields,omitempty" firestore:"fields,omitempty"`
 }
