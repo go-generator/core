@@ -1,9 +1,10 @@
 package template
 
 import (
-	st "github.com/go-generator/core/strings"
 	"strings"
 	"text/template"
+
+	st "github.com/go-generator/core/strings"
 )
 
 func MakeFuncMap() template.FuncMap {
@@ -16,5 +17,6 @@ func MakeFuncMap() template.FuncMap {
 	funcMap["singular"] = st.ToSingular
 	funcMap["camel"] = st.ToCamelCase
 	funcMap["pascal"] = st.ToPascalCase
+	funcMap["go_driver"] = st.ImportDriver
 	return funcMap
 }
