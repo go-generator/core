@@ -212,6 +212,9 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 				}
 			}
 			model["models"] = models
+			if m.Arrays == nil || len(m.Arrays) == 0 {
+				model["leaf"] = true
+			}
 		}
 		if m.Arrays != nil && len(m.Arrays) > 0 {
 			var arrays []map[string]interface{}
@@ -220,10 +223,13 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 				if s != nil {
 					sub := buildModel(*s, project.Types, env)
 					arrays = append(arrays, sub)
-				}
-				for _, f := range s.Fields {
-					if re.MatchString(f.Type) {
-						model["time"] = true
+					for _, f := range s.Fields {
+						if re.MatchString(f.Type) {
+							model["time"] = true
+						}
+					}
+					if s.Arrays == nil || len(s.Arrays) == 0 {
+						sub["leaf"] = true
 					}
 				}
 			}
