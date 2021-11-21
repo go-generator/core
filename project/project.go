@@ -3,8 +3,8 @@ package project
 import (
 	"database/sql"
 	"errors"
-	s "github.com/core-go/sql"
 	metadata "github.com/go-generator/core"
+	d "github.com/go-generator/core/driver"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,32 +34,32 @@ func SetPathEnv(key, value string) error {
 
 func ConnectDB(dbCache metadata.Database, driver string) (*sql.DB, error) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		return sql.Open(driver, dbCache.MySql)
-	case s.DriverPostgres:
+	case d.Postgres:
 		return sql.Open(driver, dbCache.Postgres)
-	case s.DriverMssql:
+	case d.Mssql:
 		return sql.Open(driver, dbCache.Mssql)
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		return sql.Open(driver, dbCache.Sqlite3)
-	case s.DriverOracle:
+	case d.Oracle:
 		return sql.Open("godror", dbCache.Oracle)
 	default:
-		return nil, errors.New(s.DriverNotSupport)
+		return nil, errors.New(d.NotSupport)
 	}
 }
 
 func SelectDSN(dbCache metadata.Database, driver string) string {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		return dbCache.MySql
-	case s.DriverPostgres:
+	case d.Postgres:
 		return dbCache.Postgres
-	case s.DriverMssql:
+	case d.Mssql:
 		return dbCache.Mssql
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		return dbCache.Sqlite3
-	case s.DriverOracle:
+	case d.Oracle:
 		return dbCache.Oracle
 	default:
 		return ""
@@ -68,45 +68,40 @@ func SelectDSN(dbCache metadata.Database, driver string) string {
 
 func UpdateDBCache(dbCache *metadata.Database, driver, dsn string) {
 	switch driver {
-	case s.DriverMysql:
+	case d.Mysql:
 		dbCache.MySql = dsn
-	case s.DriverPostgres:
+	case d.Postgres:
 		dbCache.Postgres = dsn
-	case s.DriverMssql:
+	case d.Mssql:
 		dbCache.Mssql = dsn
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		dbCache.Sqlite3 = dsn
-	case s.DriverOracle:
+	case d.Oracle:
 		dbCache.Oracle = dsn
 	}
 }
 
 func GetDatabaseName(dbCache metadata.Database, driver string) (string, error) {
 	switch driver {
-	case s.DriverMysql:
-		s1 := strings.Split(dbCache.MySql, "/")
-		if len(s1) < 2 {
-			return "", errors.New("invalid datasource")
-		}
-		s2 := strings.Split(s1[1], "?")
-		return s2[0], nil
-	case s.DriverPostgres:
+	case d.Mysql:
+		return GetName(dbCache.MySql)
+	case d.Postgres:
 		s1 := strings.Split(dbCache.Postgres, "dbname=")
 		if len(s1) < 2 {
-			return "", errors.New("invalid datasource")
+			return GetName(dbCache.Postgres)
 		}
 		s2 := strings.Split(s1[1], " ")
 		return s2[0], nil
-	case s.DriverMssql:
+	case d.Mssql:
 		s1 := strings.Split(dbCache.Mssql, "database=")
 		if len(s1) < 2 {
 			return "", errors.New("invalid datasource")
 		}
 		s2 := strings.Split(s1[1], "&")
 		return s2[0], nil
-	case s.DriverSqlite3:
+	case d.Sqlite3:
 		return filepath.Base(dbCache.Sqlite3), nil
-	case s.DriverOracle:
+	case d.Oracle:
 		s1 := strings.Split(dbCache.Oracle, "//")
 		if len(s1) < 2 {
 			return "", errors.New("invalid datasource")
@@ -114,6 +109,18 @@ func GetDatabaseName(dbCache metadata.Database, driver string) (string, error) {
 		s2 := strings.Split(s1[1], ":")
 		return s2[0], nil
 	default:
-		return "", errors.New(s.DriverNotSupport)
+		return "", errors.New(d.NotSupport)
 	}
+}
+func GetName(s string) (string, error) {
+	i := strings.LastIndex(s, "/")
+	if i >= 0 {
+		j := strings.LastIndex(s, "?")
+		if j < 0 {
+			return s[i+1:], nil
+		} else {
+			return s[i+1:j], nil
+		}
+	}
+	return "", errors.New("invalid datasource")
 }

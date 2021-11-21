@@ -11,7 +11,7 @@ import (
 	"text/template"
 )
 
-func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, langTmpl map[string]map[string]string) ([]metadata.File, error) {
+func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, langTmpl map[string]map[string]string, options...map[string]map[string]string) ([]metadata.File, error) {
 	prj, err := DecodeProject([]byte(projectJson), projectName, build.InitEnv)
 	if err != nil {
 		return nil, err
@@ -20,18 +20,22 @@ func GenerateFiles(projectName, projectJson string, funcMap template.FuncMap, la
 	if ok && projectName != "" {
 		prj.Env["go_module"] = projectName
 	}
-	prj.Types = types.Types[prj.Language]
+	if !(prj.Types != nil && len(prj.Types) > 0) {
+		if len(options) > 0 && options[0] != nil {
+			prj.Types = options[0][prj.Language]
+		} else {
+			prj.Types = types.Types[prj.Language]
+		}
+	}
 	return Generate(prj, langTmpl[prj.Language], funcMap, build.BuildModel)
 }
 func Generate(
 	project metadata.Project,
 	templates map[string]string,
 	funcMap template.FuncMap,
-	buildModel func(m metadata.Model, types map[string]string,
-		env map[string]interface{}) map[string]interface{},
+	buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
 	options ...func(map[string]string) map[string]interface{},
 ) ([]metadata.File, error) {
-
 	var outputFile []metadata.File
 	var err error
 	pathSeparator := string(os.PathSeparator)

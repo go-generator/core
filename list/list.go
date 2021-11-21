@@ -13,7 +13,7 @@ func ShowFiles(data binding.ExternalStringList, dataSt binding.Struct, files []m
 		return err
 	}
 	for i := range files {
-		filename := strconv.Itoa(i) + ". " + filepath.Base(files[i].Name)
+		filename := strconv.Itoa(i+1) + ". " + filepath.Base(files[i].Name)
 		err = data.Append(filename)
 		if err != nil {
 			return err
