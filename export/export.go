@@ -54,19 +54,19 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	tableNames := build.BuildNames(n)
 	m.Name = tableNames["Name"]
 	m.Table = table
-	m.Source = table
+	//m.Source = table
 	for _, v := range sqlTable {
 		colNames := build.BuildNames(strings.ToLower(v.Column))
 		var f metadata.Field
-		if hasCompositeKey {
-			f.Source = colNames["name"]
-		} else {
-			if v.ColumnKey == "PRI" {
-				f.Source = "_id"
-			} else {
-				f.Source = colNames["name"]
-			}
-		}
+		//if hasCompositeKey {
+		//	f.Source = colNames["name"]
+		//} else {
+		//	if v.ColumnKey == "PRI" {
+		//		f.Source = "_id"
+		//	} else {
+		//		f.Source = colNames["name"]
+		//	}
+		//}
 		f.Column = v.Column
 		f.Name = colNames["Name"]
 		f.Type = types[v.DataType]
@@ -92,6 +92,9 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			})
 			if ref.Relationship == relationship.OneToMany {
 				m.Arrays = append(m.Arrays, relModel)
+			}
+			if ref.Relationship == relationship.ManyToOne {
+				m.Models = append(m.Models, relModel)
 			}
 			if ref.Relationship == relationship.OneToOne {
 				m.Ones = append(m.Ones, relModel)

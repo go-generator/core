@@ -3,6 +3,7 @@ package relationship
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"reflect"
 	"regexp"
 	"strings"
@@ -28,8 +29,14 @@ func init() {
 	}
 }
 
-func pop(slice []string) []string {
-	return append(slice[:0], slice[1:]...)
+type TableRelation struct {
+	Table    string
+	RefTable string
+}
+
+type ColumnRelation struct {
+	Col    string
+	RefCol string
 }
 
 // GetRelationshipTable
@@ -39,8 +46,12 @@ func pop(slice []string) []string {
 // self reference will be in the same table with the same datatype
 func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string, primaryKeys map[string][]string) ([]RelTables, error) {
 	driver := s.GetDriver(db)
-	var relations []RelTables
-	var sqliteRels []SqliteRel
+	var (
+		relations      []RelTables
+		sqliteRels     []SqliteRel
+		tableRelations []TableRelation
+		colRelations   []ColumnRelation
+	)
 	switch s.GetDriver(db) {
 	case d.Sqlite3:
 		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")
@@ -59,32 +70,34 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 			for i := range tables {
 				tables[i] = strings.ReplaceAll(tables[i], `"`, ``)
 			}
-			var tbNames []string
+			if len(tables) < 1 {
+				return nil, errors.New("error getting table relation")
+			}
 			parentTb := tables[0]
-			tbNames = append(tbNames, parentTb)
-			tables = pop(tables)
-			for i := range tables {
-				if i == len(tables)-1 {
-					tbNames = append(tbNames, tables[i])
-				} else {
-					tbNames = append(tbNames, parentTb)
-					tbNames = append(tbNames, tables[i])
-				}
+			for i := 1; i < len(tables); i++ {
+				tableRelations = append(tableRelations, TableRelation{
+					Table:    parentTb,
+					RefTable: tables[i],
+				})
 			}
 			columns := fk.FindAllString(sqliteRels[i].Sql, -1)
 			for i := range columns {
 				columns[i] = strings.ReplaceAll(columns[i], `([`, ``)
 				columns[i] = strings.ReplaceAll(columns[i], `])`, ``)
 			}
-			if len(tables) > 0 {
-				for i := 0; i < len(tbNames)-1; i++ {
-					var rel RelTables
-					rel.Table = tbNames[i]
-					rel.ReferencedTable = tbNames[i+1]
-					rel.Column = columns[i]
-					rel.ReferencedColumn = columns[i+1]
-					relations = append(relations, rel)
-				}
+			for i := 0; i < len(columns)-1; i += 2 {
+				colRelations = append(colRelations, ColumnRelation{
+					Col:    columns[i],
+					RefCol: columns[i+1],
+				})
+			}
+			for i := 0; i < len(tableRelations); i++ {
+				var rel RelTables
+				rel.Table = tableRelations[i].RefTable
+				rel.ReferencedTable = tableRelations[i].Table
+				rel.Column = colRelations[i].RefCol
+				rel.ReferencedColumn = colRelations[i].Col
+				relations = append(relations, rel)
 			}
 		}
 	case d.Oracle:
@@ -119,8 +132,33 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 			} else {
 				relations[i].Relationship = OneToOne
 			}
-		} else {
+		}
+		if isP1 && !isP2 {
 			relations[i].Relationship = OneToMany
+		}
+		if !isP1 && isP2 {
+			relations[i].Relationship = ManyToOne
+		}
+	}
+	for i := range relations {
+		if relations[i].Relationship == OneToMany {
+			skip := false
+			reverse := RelTables{
+				Table:            relations[i].ReferencedTable,
+				Column:           relations[i].ReferencedColumn,
+				ReferencedTable:  relations[i].Table,
+				ReferencedColumn: relations[i].Column,
+				Relationship:     ManyToOne,
+			}
+			for j := range relations {
+				if reverse == relations[j] {
+					skip = true
+					break
+				}
+			} // skip duplicate
+			if !skip {
+				relations = append(relations, reverse)
+			}
 		}
 	}
 	return relations, nil
