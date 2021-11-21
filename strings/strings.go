@@ -7,6 +7,16 @@ var replaces = []string{"y", "ee", "ae", "ue", "fe", "ay", "ey", "iy", "oy", "uy
 var plural = []string{"people", "children", "women", "men", "fungus", "feet", "teeth", "geese", "mice", "gasses", "phenomena", "criteria", "sheep", "series", "species", "deer", "fish", "roofs", "beliefs", "chefs", "chiefs", "photos", "pianos", "halos", "volcanos", "volcanoes", "fezzes" }
 var singular = []string{"person", "child", "woman", "man", "fungi", "foot", "tooth", "goose", "mouse", "gas", "phenomenon", "criterion", "sheep", "series", "species", "deer", "fish", "roof", "belief", "chef", "chief", "photo", "piano", "halo", "volcano", "volcano", "fez"}
 
+func ToCamelCase(s string) string {
+	if len(s) <= 2 {
+		return strings.ToLower(s)
+	} else {
+		return strings.ToLower(string(s[0])) + s[1:]
+	}
+}
+func ToPascalCase(s string) string {
+	return strings.ToUpper(string(s[0])) + s[1:]
+}
 func ToSingular(s string) string {
 	if len(s) <= 1 {
 		return s

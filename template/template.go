@@ -14,5 +14,7 @@ func MakeFuncMap() template.FuncMap {
 	funcMap["unsnake"] = st.UnBuildSnakeName
 	funcMap["plural"] = st.ToPlural
 	funcMap["singular"] = st.ToSingular
+	funcMap["camel"] = st.ToCamelCase
+	funcMap["pascal"] = st.ToPascalCase
 	return funcMap
 }

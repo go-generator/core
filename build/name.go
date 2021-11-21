@@ -20,8 +20,8 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	}
 	n = map[string]string{
 		"raw":      raw,
-		"name":     strings.ToLower(string(name[0])) + name[1:],
-		"Name":     strings.ToUpper(string(name[0])) + name[1:],
+		"name":     st.ToCamelCase(name),
+		"Name":     st.ToPascalCase(name),
 		"NAME":     strings.ToUpper(name),
 		"constant": strings.ToUpper(raw),
 		"lower":    strings.ToLower(name),
@@ -32,8 +32,8 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	raws := toPlural(raw)
 	names := st.UnBuildSnakeName(raws)
 	n["raws"] = raws
-	n["names"] = strings.ToLower(string(names[0])) + names[1:]
-	n["Names"] = strings.ToUpper(string(names[0])) + names[1:]
+	n["names"] = st.ToCamelCase(names)
+	n["Names"] = st.ToPascalCase(names)
 	n["NAMES"] = strings.ToUpper(names)
 	n["constants"] = strings.ToUpper(raws)
 	n["lowers"] = strings.ToLower(names)
@@ -70,8 +70,8 @@ func buildProjectName(name string) map[string]string {
 	}
 	return map[string]string{
 		"project_raw":      raw,
-		"project":          strings.ToLower(string(name[0])) + name[1:],
-		"Project":          strings.ToUpper(string(name[0])) + name[1:],
+		"project":          st.ToCamelCase(name),
+		"Project":          st.ToPascalCase(name),
 		"project_lower":    strings.ToLower(name),
 		"project_name":     st.BuildSnakeName(name),
 		"project_constant": strings.ToUpper(raw),
@@ -81,8 +81,8 @@ func buildProjectName(name string) map[string]string {
 func buildEnvNames(name, v string) map[string]string {
 	names := map[string]string{
 		name:            v,
-		name + "_name":  strings.ToLower(string(v[0])) + v[1:],
-		name + "_Name":  strings.ToUpper(string(v[0])) + v[1:],
+		name + "_name":  st.ToCamelCase(v),
+		name + "_Name":  st.ToPascalCase(v),
 		name + "_NAME":  strings.ToUpper(v),
 		name + "_lower": strings.ToLower(v),
 	}
