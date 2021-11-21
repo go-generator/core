@@ -1,9 +1,6 @@
 package strings
 
-import (
-	"strings"
-	"text/template"
-)
+import "strings"
 
 var ends = []string{"ies", "ees", "ses", "xes", "zes", "shes", "ches", "aes", "oes", "ues"}
 var replaces = []string{"y", "ee", "s", "x", "z", "sh", "ch", "ae", "oe", "ue"}
@@ -74,17 +71,4 @@ func UnBuildSnakeName(s string) string {
 		}
 	}
 	return s1
-}
-
-func MakeFuncMap() template.FuncMap {
-	funcMap := make(template.FuncMap, 0)
-
-	funcMap["lower"] = strings.ToLower
-	funcMap["upper"] = strings.ToUpper
-	funcMap["snake"] = BuildSnakeName
-	funcMap["unsnake"] = UnBuildSnakeName
-	funcMap["plural"] = ToPlural
-	funcMap["singular"] = ToSingular
-
-	return funcMap
 }
