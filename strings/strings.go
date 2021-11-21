@@ -19,11 +19,11 @@ func ToCamelCase(s string) string {
 	if len(s) <= 2 {
 		return strings.ToLower(s)
 	} else {
-		return strings.ToLower(string(s[0])) + strings.ToLower(s[1:])
+		return strings.ToLower(string(s[0])) + s[1:]
 	}
 }
 func ToPascalCase(s string) string {
-	return strings.ToUpper(string(s[0])) + strings.ToLower(s[1:])
+	return strings.ToUpper(string(s[0])) + s[1:]
 }
 func ToSingular(s string) string {
 	if len(s) <= 1 {

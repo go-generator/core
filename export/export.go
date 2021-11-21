@@ -62,13 +62,17 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	for _, v := range sqlTable {
 		var f metadata.Field
 		org := v.Column
-		colNames := build.BuildNames(v.Column)
+		x := v.Column
+		if strings.ToUpper(x) == v.Column {
+			x = strings.ToLower(x)
+		}
+		colNames := build.BuildNames(x)
 		if colNames["Name"] == org || colNames["name"] == org {
 			f.Name = org
 		} else {
 			f.Name = colNames["Name"]
 		}
-		if v.Column == colNames["Name"] || v.Column == colNames["name"] {
+		if v.Column == colNames["Name"] || x == colNames["name"] {
 			f.Name = v.Column
 		} else {
 			f.Column = v.Column
