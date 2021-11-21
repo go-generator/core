@@ -42,6 +42,7 @@ func init() {
 }
 
 func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []gdb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+	origin := table
 	table = strings.ToLower(table)
 	var m metadata.Model
 	var raw string
@@ -52,13 +53,21 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	}
 	n := st.ToSingular(raw)
 	tableNames := build.BuildNames(n)
-	m.Name = tableNames["Name"]
-	m.Table = table
+	if tableNames["Name"] == origin || tableNames["name"] == origin {
+		m.Name = origin
+	} else {
+		m.Name = tableNames["Name"]
+		m.Table = origin
+	}
 	for _, v := range sqlTable {
-		colNames := build.BuildNames(strings.ToLower(v.Column))
+		colNames := build.BuildNames(v.Column)
 		var f metadata.Field
-		f.Column = v.Column
-		f.Name = colNames["Name"]
+		if v.Column == colNames["Name"] || v.Column == colNames["Name"] {
+			f.Name = v.Column
+		} else {
+			f.Column = v.Column
+			f.Name = colNames["Name"]
+		}
 		f.Type = types[v.DataType]
 		if v.Length != nil {
 			l, err := strconv.Atoi(*v.Length)

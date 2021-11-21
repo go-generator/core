@@ -15,7 +15,7 @@ var Types = map[string]map[string]string{
 		"smallint":     "int16",
 		"text":         "string",
 		"time":         "datetime",
-		"timestamp":    "string",
+		"timestamp":    "datetime",
 		"tinyint":      "byte",
 		"varchar":      "string",
 		"mediumtext":   "string",

@@ -3,19 +3,21 @@ package project
 import (
 	"database/sql"
 	"errors"
-	metadata "github.com/go-generator/core"
-	d "github.com/go-generator/core/driver"
 	"os"
 	"path/filepath"
 	"strings"
+
+	metadata "github.com/go-generator/core"
+	d "github.com/go-generator/core/driver"
 )
 
 const (
-	TypesJsonEnv   = "G_TYPES_JSON"
-	WindowsIconEnv = "G_WINDOWS_ICON"
-	AppIconEnv     = "G_APP_ICON"
-	TemplatePath   = "G_TEMPLATE_PATH"
-	ConfigEnv      = "G_CONFIG_PATH"
+	TypesJsonEnv     = "G_TYPES_JSON"
+	UniversalJsonEnv = "G_UNIVERSAL_JSON"
+	WindowsIconEnv   = "G_WINDOWS_ICON"
+	AppIconEnv       = "G_APP_ICON"
+	TemplatePath     = "G_TEMPLATE_PATH"
+	ConfigEnv        = "G_CONFIG_PATH"
 )
 
 func SetPathEnv(key, value string) error {
@@ -119,7 +121,7 @@ func GetName(s string) (string, error) {
 		if j < 0 {
 			return s[i+1:], nil
 		} else {
-			return s[i+1:j], nil
+			return s[i+1 : j], nil
 		}
 	}
 	return "", errors.New("invalid datasource")
