@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
+	st "github.com/go-generator/core/strings"
 	"github.com/go-generator/core/types"
 )
 
@@ -135,6 +136,9 @@ func Generate(
 							text = strings.Replace(text, "|}", "}", -1)
 						}
 					}
+					if _, ok := project.Env["root"]; ok {
+						entityPath = st.FormatDirectory(entityPath)
+					}
 					outputFile = append(outputFile, metadata.File{
 						Name:    entityPath,
 						Content: text,
@@ -161,6 +165,9 @@ func Generate(
 							if strings.Contains(text, "|}") {
 								text = strings.Replace(text, "|}", "}", -1)
 							}
+						}
+						if _, ok := project.Env["root"]; ok {
+							entityPath = st.FormatDirectory(entityPath)
 						}
 						outputFile = append(outputFile, metadata.File{
 							Name:    entityPath,

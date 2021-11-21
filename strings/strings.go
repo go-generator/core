@@ -1,6 +1,8 @@
 package strings
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/stoewer/go-strcase"
@@ -160,4 +162,12 @@ func ImportGoMod(s string) string {
 	default:
 		return ""
 	}
+}
+
+func FormatDirectory(path string) string {
+	ext := filepath.Ext(path)
+	dir := strings.ReplaceAll(path, ext, "")
+	dir = strings.ReplaceAll(dir, ".", string(os.PathSeparator))
+	dir += ext
+	return dir
 }
