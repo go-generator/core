@@ -52,7 +52,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			tmpMap := generator.BuildNames(rl.Table)
 			foreign.Name = tmpMap["Name"]
 			foreign.Source = tmpMap["name"]
-			foreign.Type = "*[]" + tmpMap["Names"]                                        // for many to many relationship
+			foreign.Type = "*[]" + tmpMap["Name"]
 			if rl.Relationship == relationship.ManyToOne && table == rl.ReferencedTable { // have Many to One relation, add a field to the current struct
 				rls.Ref = rl.Table
 				rls.Fields = append(rls.Fields, metadata.Link{

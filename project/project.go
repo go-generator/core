@@ -17,11 +17,14 @@ import (
 	"github.com/go-generator/core/export"
 	edb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/relationship"
+	uni "github.com/go-generator/core/export/types"
 	"github.com/go-generator/core/generator"
 	"github.com/go-generator/core/io"
+	"github.com/go-generator/core/types"
 	"github.com/sqweek/dialog"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -108,7 +111,7 @@ func ValidateDatabaseConfig(dc metadata.DatabaseConfig) error {
 	return err
 }
 
-func RunWithUI(ctx context.Context, size fyne.Size, types map[string]string, prTmplName, projectName string, dbCache metadata.Database, authType string, templates map[string]string) error {
+func RunWithUI(ctx context.Context, size fyne.Size, prTmplName, projectName string, dbCache metadata.Database, authType string, templates map[string]string) error {
 	var dbConfig metadata.DatabaseConfig
 	outer := make(map[string]string, 0)
 	encryptField := "password"
@@ -140,11 +143,11 @@ func RunWithUI(ctx context.Context, size fyne.Size, types map[string]string, prT
 		User:     outer["user"],
 		Password: outer["password"],
 	}
-	err = DriverInputUI(ctx, dbConfig, fyne.CurrentApp(), prTmplName, projectName, encryptField, size, types, dbCache, authType, templates)
+	err = DriverInputUI(ctx, dbConfig, fyne.CurrentApp(), prTmplName, projectName, encryptField, size, dbCache, authType, templates)
 	return err
 }
 
-func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App, prTmplName, projectName, encryptField string, size fyne.Size, types map[string]string, dbCache metadata.Database, authType string, templates map[string]string) error {
+func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App, prTmplName, projectName, encryptField string, size fyne.Size, dbCache metadata.Database, authType string, templates map[string]string) error {
 	oldCache := dbCache
 	driverEntry := widget.NewRadioGroup([]string{s.DriverMysql, s.DriverPostgres, s.DriverMssql, s.DriverSqlite3}, func(s string) {
 		dc.Driver = s
@@ -287,7 +290,8 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 			display.ShowErrorWindows(app, err, size)
 			return
 		}
-		toModels, err = export.ToModels(ctx, db, dbName, tables, rt, types)
+		t := uni.Types[driverEntry.Selected]
+		toModels, err = export.ToModels(ctx, db, dbName, tables, rt, t)
 		if err != nil {
 			display.ShowErrorWindows(app, err, size)
 			return
@@ -299,8 +303,19 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 				return
 			}
 		} else {
-
 			prj, err = generator.ExportProject(templates, prTmplName, projectName, toModels, generator.InitEnv)
+			exTypes, ok := types.Types[prj.Language]
+			if !ok {
+				log.Fatal("missing export type for current language")
+			}
+			for i := range prj.Models {
+				for j := range prj.Models[i].Fields {
+					if _, ok := exTypes[prj.Models[i].Fields[j].Type]; !ok {
+						continue
+					}
+					prj.Models[i].Fields[j].Type = exTypes[prj.Models[i].Fields[j].Type] // converse from universal time to go type
+				}
+			}
 			if err != nil {
 				display.ShowErrorWindows(app, err, size)
 				return
@@ -351,10 +366,6 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 			return
 		}
 	})
-	codeWidows := fyne.CurrentApp().NewWindow("Generated Code")
-	codeWidows.Resize(display.ResizeWindows(15, 20, size))
-	codeWidows.SetContent(container.NewBorder(nil, saveProject, nil, nil, container.NewScroll(codeEntry)))
-	codeWidows.Show()
 
 	auth := container.NewVBox()
 	if authType == BasicAuth {
@@ -363,12 +374,9 @@ func DriverInputUI(ctx context.Context, dc metadata.DatabaseConfig, app fyne.App
 	if authType == Datasource {
 		auth = datasource(dbCache, driverEntry)
 	}
-	window.SetContent(container.NewBorder(optimizeEntry, executeButton, nil, nil,
+	window.SetContent(container.NewHSplit(container.NewBorder(optimizeEntry, executeButton, nil, nil,
 		auth,
-	))
-	window.SetOnClosed(func() {
-		codeWidows.Close()
-	})
+	), container.NewBorder(nil, saveProject, nil, nil, container.NewScroll(codeEntry))))
 	window.CenterOnScreen()
 	window.Show()
 	return err
