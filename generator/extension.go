@@ -72,8 +72,8 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	}
 	if len(models) > 0 && models[0] != nil {
 		input.Models = models[0]
+		input.Collection = BuildCollection(input.Models)
 	}
-	input.Collection = BuildCollection(input.Models)
 	return input, err
 }
 

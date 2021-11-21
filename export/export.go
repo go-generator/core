@@ -60,8 +60,8 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		f.Column = v.Column
 		f.Name = colNames["Name"]
 		f.Type = types[v.DataType]
-		if v.Length.Valid {
-			l, err := strconv.Atoi(v.Length.String)
+		if v.Length != nil {
+			l, err := strconv.Atoi(*v.Length)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +115,8 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 
 func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb.TableInfo, primaryKeys map[string][]string) error {
 	query := ""
-	switch s.GetDriver(db) {
+	driver := s.GetDriver(db)
+	switch driver {
 	case d.Mysql:
 		query = `
 			SELECT 
@@ -131,8 +132,12 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 				TABLE_SCHEMA = '%v'
 					AND TABLE_NAME = '%v'`
 		query = fmt.Sprintf(query, database, table)
+		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
+		if err != nil {
+			return err
+		}
 	case d.Postgres:
-		query := `
+		query = `
 			SELECT TABLE_NAME AS TABLE,
 				COLUMN_NAME,
 				IS_NULLABLE,
@@ -141,22 +146,35 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			FROM INFORMATION_SCHEMA.COLUMNS
 			WHERE TABLE_NAME = '%v';`
 		query = fmt.Sprintf(query, table)
+		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
+		if err != nil {
+			return err
+		}
 	case d.Mssql:
 		query = `
-			SELECT 
-    			TABLE_NAME AS 'table',
-    			COLUMN_NAME AS 'column_name',
-				DATA_TYPE AS 'type',
-				IS_NULLABLE AS 'is_nullable',
-				CHARACTER_MAXIMUM_LENGTH AS 'length'
-			FROM
+			select
+				table_name as 'table',
+				column_name as 'column_name',
+				data_type as 'type',
+				is_nullable as 'is_nullable',
+				character_maximum_length as 'length'
+			from
 				information_schema.columns
-			WHERE
-				TABLE_NAME = '%v'`
+			where
+				table_name = '%v'`
 		query = fmt.Sprintf(query, table)
+		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
+		if err != nil {
+			return err
+		}
 	case d.Sqlite3:
-		query := `
-		select name as 'column_name', type, pk as 'column_key' from pragma_table_info('%v');`
+		query = `
+			select
+				name as 'column_name',
+				type,
+				pk as 'column_key'
+			from
+				pragma_table_info('%v');`
 		query = fmt.Sprintf(query, table)
 		var notNull []relationship.SqliteNotNull
 		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
@@ -170,8 +188,17 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		if err != nil {
 			return err
 		}
-		sqlitePKMap(st, notNull)
-		return nil
+		for i := range st.Fields {
+			for j := range notNull {
+				if st.Fields[i].Column == notNull[j].Name {
+					if notNull[j].NotNull {
+						st.Fields[i].IsNullable = "0"
+					} else {
+						st.Fields[i].IsNullable = "1"
+					}
+				}
+			}
+		}
 	case d.Oracle:
 		query = `
 			SELECT
@@ -180,7 +207,9 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 				col.column_name AS "column_name",
 				col.data_type AS "type",
 				col.data_length AS "length",
-				col.nullable AS "is_nullable"
+				col.nullable AS "is_nullable",
+				col.data_precision AS "precision",
+				col.data_scale AS "scale"
 			FROM
 				sys.all_tab_columns col
 			INNER JOIN sys.all_tables t ON
@@ -192,16 +221,17 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			ORDER BY
 				col.column_id`
 		query = fmt.Sprintf(query, database, table)
-	}
-	err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
-	if err != nil {
-		return err
+		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
+		if err != nil {
+			return err
+		}
 	}
 	for i := range st.Fields {
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
 		}
 	}
+	mapDataType(driver, st)
 	st.HasCompositeKey = HasCKey(table, primaryKeys)
 	for i := range st.Fields {
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
@@ -237,42 +267,65 @@ func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, t
 	return primaryKeys, nil
 }
 
-func sqlitePKMap(st *gdb.TableInfo, notNull []relationship.SqliteNotNull) {
-	for i := range st.Fields {
-		if st.Fields[i].ColumnKey == "1" {
-			st.Fields[i].ColumnKey = "PRI"
-		}
-		re := regexp.MustCompile(`\d+`)
-		if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
-			st.Fields[i].DataType = "NUMERIC"
-		}
-		if strings.Contains(st.Fields[i].DataType, "VARCHAR") {
-			st.Fields[i].Length = sql.NullString{
-				String: re.FindString(st.Fields[i].DataType),
-				Valid:  true,
+func mapDataType(driver string, st *gdb.TableInfo) {
+	re := regexp.MustCompile(`\d+`)
+	switch driver {
+	case d.Sqlite3:
+		for i := range st.Fields {
+			l := re.FindString(st.Fields[i].DataType)
+			if st.Fields[i].ColumnKey == "1" {
+				st.Fields[i].ColumnKey = "PRI"
 			}
-			st.Fields[i].DataType = "VARCHAR"
-		}
-		if strings.Contains(st.Fields[i].DataType, "CHARACTER") {
-			st.Fields[i].Length = sql.NullString{
-				String: re.FindString(st.Fields[i].DataType),
-				Valid:  true,
+			if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
+				st.Fields[i].DataType = "NUMERIC"
 			}
-			st.Fields[i].DataType = "CHARACTER"
-		}
-		if strings.Contains(st.Fields[i].DataType, "NVARCHAR") {
-			st.Fields[i].Length = sql.NullString{
-				String: re.FindString(st.Fields[i].DataType),
-				Valid:  true,
+			if strings.Contains(st.Fields[i].DataType, "VARCHAR") {
+				st.Fields[i].Length = &l
+				st.Fields[i].DataType = "VARCHAR"
 			}
-			st.Fields[i].DataType = "NVARCHAR"
+			if strings.Contains(st.Fields[i].DataType, "CHARACTER") {
+				st.Fields[i].Length = &l
+				st.Fields[i].DataType = "CHARACTER"
+			}
+			if strings.Contains(st.Fields[i].DataType, "NVARCHAR") {
+				st.Fields[i].Length = &l
+				st.Fields[i].DataType = "NVARCHAR"
+			}
 		}
-		for j := range notNull {
-			if st.Fields[i].Column == notNull[j].Name {
-				if notNull[j].NotNull {
-					st.Fields[i].IsNullable = "0"
+	case d.Oracle:
+		for i := range st.Fields {
+			if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
+				st.Fields[i].DataType = "NUMERIC"
+			}
+			if strings.Contains(st.Fields[i].DataType, "NUMBER") {
+				scale := 0
+				precision := 38 // default precision for oracle
+				if st.Fields[i].Scale != nil {
+					scale = *st.Fields[i].Scale
+				}
+				if st.Fields[i].Precision != nil {
+					precision = *st.Fields[i].Precision
+				}
+				if st.Fields[i].Scale == nil && st.Fields[i].Precision == nil {
+					st.Fields[i].DataType = "NUMBER(7,0)"
 				} else {
-					st.Fields[i].IsNullable = "1"
+					if scale == 0 {
+						if precision <= 2 {
+							st.Fields[i].DataType = "NUMBER(2,0)"
+						} else {
+							if precision <= 4 {
+								st.Fields[i].DataType = "NUMBER(4,0)"
+							} else {
+								if precision <= 6 {
+									st.Fields[i].DataType = "NUMBER(6,0)"
+								} else {
+									st.Fields[i].DataType = "NUMBER(7,0)"
+								}
+							}
+						}
+					} else {
+						st.Fields[i].DataType = "NUMBER"
+					}
 				}
 			}
 		}

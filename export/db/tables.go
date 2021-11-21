@@ -10,11 +10,13 @@ import (
 )
 
 type TableFields struct {
-	Column     string         `gorm:"column:column_name"`
-	DataType   string         `gorm:"column:type"`
-	IsNullable string         `gorm:"column:is_nullable"`
-	ColumnKey  string         `gorm:"column:column_key"`
-	Length     sql.NullString `gorm:"column:length"`
+	Column     string  `gorm:"column:column_name"`
+	DataType   string  `gorm:"column:type"`
+	IsNullable string  `gorm:"column:is_nullable"`
+	ColumnKey  string  `gorm:"column:column_key"`
+	Length     *string `gorm:"column:length"`
+	Precision  *int    `gorm:"column:precision"`
+	Scale      *int    `gorm:"column:scale"`
 }
 
 type TableInfo struct {
