@@ -72,7 +72,18 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	if len(models) > 0 && models[0] != nil {
 		input.Models = models[0]
 	}
+	input.Collection = BuildCollection(input.Models)
 	return input, err
+}
+
+func BuildCollection(models []metadata.Model) []string {
+	var collections []string
+	for _, m := range models {
+		if !(len(m.Models) > 0 && len(m.Arrays) <= 0) {
+			collections = append(collections, m.Name)
+		}
+	}
+	return collections
 }
 
 func ExportProject(projectTemplateName, projectName string, templates map[string]string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {

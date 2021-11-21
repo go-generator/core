@@ -30,6 +30,7 @@ func GenerateFiles(projectName, projectJson string, projectTemplate map[string]m
 	}
 	return Generate(prj, projectTemplate[prj.Language], funcMap, build.BuildModel)
 }
+
 func Generate(
 	project metadata.Project,
 	templates map[string]string,
@@ -47,7 +48,7 @@ func Generate(
 		parseEnv = ParseEnv
 	}
 	env := parseEnv(project.Env)
-	collections := InitProject(project, buildModel, env)
+	entities, collections := InitProject(project, buildModel, env)
 	for _, v := range project.Statics {
 		m := make(map[string]interface{}, 0)
 		m["env"] = env
@@ -102,36 +103,48 @@ func Generate(
 		}
 	}
 	for _, e := range project.Entities {
-		for _, v := range collections {
-			if str, ok := templates[e.Name]; ok {
-				text, err2 := parsing(str, v, "entity_"+e.Name, funcMap)
-				if err2 != nil {
-					return nil, fmt.Errorf("generating model file error: %w", err2)
-				}
-				entityPath, err3 := generateFilePath(e.File, v, funcMap)
-				if err3 != nil {
-					return nil, fmt.Errorf("generating file path error: %w", err3)
-				}
-				entityPath = strings.ReplaceAll(entityPath, "/", pathSeparator)
-				if e.Replace {
-					if strings.Contains(text, "{|") {
-						text = strings.Replace(text, "{|", "{", -1)
+		for _, v := range entities {
+			if e.Model || InCollection(project.Collection, v.Model.Name) {
+				if str, ok := templates[e.Name]; ok {
+					text, err2 := parsing(str, v.Params, "entity_"+e.Name, funcMap)
+					if err2 != nil {
+						return nil, fmt.Errorf("generating model file error: %w", err2)
 					}
-					if strings.Contains(text, "|}") {
-						text = strings.Replace(text, "|}", "}", -1)
+					entityPath, err3 := generateFilePath(e.File, v.Params, funcMap)
+					if err3 != nil {
+						return nil, fmt.Errorf("generating file path error: %w", err3)
 					}
+					entityPath = strings.ReplaceAll(entityPath, "/", pathSeparator)
+					if e.Replace {
+						if strings.Contains(text, "{|") {
+							text = strings.Replace(text, "{|", "{", -1)
+						}
+						if strings.Contains(text, "|}") {
+							text = strings.Replace(text, "|}", "}", -1)
+						}
+					}
+					outputFile = append(outputFile, metadata.File{
+						Name:    entityPath,
+						Content: text,
+					})
+				} else {
+					return nil, errors.New("template must be string")
 				}
-				outputFile = append(outputFile, metadata.File{
-					Name:    entityPath,
-					Content: text,
-				})
-			} else {
-				return nil, errors.New("template must be string")
 			}
 		}
 	}
 	return outputFile, err
 }
+
+func InCollection(collection []string, name string) bool {
+	for _, c := range collection {
+		if name == c {
+			return true
+		}
+	}
+	return false
+}
+
 func parsing(t string, m map[string]interface{}, name string, funcMap template.FuncMap) (string, error) {
 	strBld := &strings.Builder{}
 	tmp, err := template.New(name).Funcs(funcMap).Parse(t)
@@ -158,7 +171,14 @@ func generateFilePath(path string, m map[string]interface{}, funcMap template.Fu
 	filePath = strings.ReplaceAll(filePath, "/", string(os.PathSeparator))
 	return filePath, err
 }
-func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) []map[string]interface{} {
+
+type Entity struct {
+	Model  metadata.Model         `mapstructure:"model" json:"model,omitempty" gorm:"column:model" bson:"model,omitempty" dynamodbav:"model,omitempty" firestore:"model,omitempty"`
+	Params map[string]interface{} `mapstructure:"params" json:"params,omitempty" gorm:"column:params" bson:"params,omitempty" dynamodbav:"params,omitempty" firestore:"params,omitempty"`
+}
+
+func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) ([]Entity, []map[string]interface{}) {
+	var entities []Entity
 	var collections []map[string]interface{}
 	var env map[string]interface{}
 	if len(options) > 0 && options[0] != nil {
@@ -168,10 +188,13 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	}
 	for _, m := range project.Models {
 		model := buildModel(m, project.Types, env)
+		entity := Entity{Model: m, Params: model}
+		entities = append(entities, entity)
 		collections = append(collections, model)
 	}
-	return collections
+	return entities, collections
 }
+
 func ParseEnv(env map[string]string) map[string]interface{} {
 	res := make(map[string]interface{}, 0)
 	res["layer"] = false
