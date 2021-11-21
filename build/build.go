@@ -27,6 +27,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		table = src
 	}
 	collection["table"] = table
+	collection["TABLE"] = strings.ToUpper(table)
 	collection["source"] = src
 	collection["tsId"] = "string"
 	collection["ts_date"] = ""
@@ -88,6 +89,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["key"] = f.Key
 			sub["source"] = source
 			sub["column"] = column
+			sub["COLUMN"] = strings.ToUpper(column)
 			sub["length"] = f.Length
 			sub["maxlength"] = f.Length
 			sub["env"] = env
