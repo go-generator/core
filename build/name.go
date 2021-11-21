@@ -18,8 +18,10 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 		raw = strings.ToLower(name)
 		name = st.UnBuildSnakeName(raw)
 	}
+	path := strings.Replace(raw, "_", "-", -1)
 	n = map[string]string{
 		"raw":      raw,
+		"path":     path,
 		"name":     st.ToCamelCase(name),
 		"Name":     st.ToPascalCase(name),
 		"NAME":     strings.ToUpper(name),
@@ -30,8 +32,10 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 		return n
 	}
 	raws := toPlural(raw)
+	paths := strings.Replace(raws, "_", "-", -1)
 	names := st.UnBuildSnakeName(raws)
 	n["raws"] = raws
+	n["paths"] = paths
 	n["names"] = st.ToCamelCase(names)
 	n["Names"] = st.ToPascalCase(names)
 	n["NAMES"] = strings.ToUpper(names)
