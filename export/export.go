@@ -9,7 +9,6 @@ import (
 	edb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/relationship"
 	"github.com/go-generator/core/generator"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"

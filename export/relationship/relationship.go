@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	s "github.com/core-go/sql"
-	"github.com/go-generator/core/export/build"
+	"github.com/go-generator/core/export/query"
 	"regexp"
 	"strings"
 )
@@ -49,7 +49,7 @@ func setRelation(ctx context.Context, db *sql.DB, unique, refUnique bool, databa
 	//}
 	if unique {
 		var keys []PrimaryKey
-		query, err := build.ListAllPrimaryKeys(database, driver, rt.Table)
+		query, err := query.ListAllPrimaryKeys(database, driver, rt.Table)
 		err = s.Query(ctx, db, nil, &keys, query)
 		if err != nil {
 			return "", err
@@ -115,7 +115,7 @@ func initRelationshipTable(ctx context.Context, db *sql.DB, database string) ([]
 	driver := s.GetDriver(db)
 	var relTables []RelTables
 	var sqliteRels []SqliteRel
-	query, err := build.ListReferenceQuery(database, driver)
+	query, err := query.ListReferenceQuery(database, driver)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func isUnique(ctx context.Context, db *sql.DB, database, driver, table, column s
 		mssqlIndex  []MssqlUnique
 		sqliteIndex []SqliteUnique
 	)
-	query, err := build.ListUniqueQuery(database, driver, table)
+	query, err := query.ListUniqueQuery(database, driver, table)
 	if err != nil {
 		return false, err
 	}
@@ -277,7 +277,7 @@ func CheckPrimaryTag(ctx context.Context, db *sql.DB, database, driver, table, c
 		postgresIndex []PostgresUnique
 		sqliteIndex   []SqliteUnique
 	)
-	query, err := build.ListUniqueQuery(database, driver, table)
+	query, err := query.ListUniqueQuery(database, driver, table)
 	if err != nil {
 		return false, err
 	}
@@ -337,7 +337,7 @@ func CheckPrimaryTag(ctx context.Context, db *sql.DB, database, driver, table, c
 func listPrimaryKeys(ctx context.Context, db *sql.DB, database, table string) ([]PrimaryKey, error) { // Return a slice of Column of the composite key
 	driver := s.GetDriver(db)
 	var res []PrimaryKey
-	query, err := build.ListAllPrimaryKeys(database, driver, table)
+	query, err := query.ListAllPrimaryKeys(database, driver, table)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +351,7 @@ func listPrimaryKeys(ctx context.Context, db *sql.DB, database, table string) ([
 func ListTables(ctx context.Context, db *sql.DB, database string) ([]Tables, error) {
 	driver := s.GetDriver(db)
 	var tables []Tables
-	query, err := build.ListTablesQuery(database, driver)
+	query, err := query.ListTablesQuery(database, driver)
 	if err != nil {
 		return nil, err
 	}

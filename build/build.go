@@ -41,6 +41,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub := make(map[string]interface{}, 0)
 			tmp := generator.BuildNames(f.Name)
 			MergeMap(sub, tmp)
+			x := f.Type
 			sub["simpleTypes"] = f.Type
 			t, ok := types[f.Type]
 			if ok && len(t) > 0 {
@@ -61,6 +62,37 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["column"] = column
 			sub["length"] = f.Length
 			sub["env"] = env
+			if x == "datedate" || x == "date" {
+				sub["goFilterType"] = "*TimeRange"
+				sub["tsFilterType"] = "Date|DateRange"
+				sub["javaFilterType"] = "DateRange"
+				sub["csFilterType"] = "DateTimeRange"
+			} else if x == "float64" {
+				sub["goFilterType"] = "*NumberRange"
+				sub["tsFilterType"] = "number|NumberRange"
+				sub["javaFilterType"] = "NumberRange"
+				sub["csFilterType"] = "NumberRange"
+			} else if x == "int64" {
+				sub["goFilterType"] = "*Int64Range"
+				sub["tsFilterType"] = "number|NumberRange"
+				sub["javaFilterType"] = "Int64Range"
+				sub["csFilterType"] = "Int64Range"
+			} else if x == "float32" {
+				sub["goFilterType"] = "*NumberRange"
+				sub["tsFilterType"] = "number|NumberRange"
+				sub["javaFilterType"] = "FloatRange"
+				sub["csFilterType"] = "FloatRange"
+				sub["javaFilterType"] = "Int32Range"
+				sub["csFilterType"] = "Int32Range"
+			} else if x == "int32" {
+				sub["goFilterType"] = "*Int32Range"
+				sub["tsFilterType"] = "number|NumberRange"
+			} else {
+				sub["goFilterType"] = t
+				sub["tsFilterType"] = t
+				sub["javaFilterType"] = t
+				sub["csFilterType"] = t
+			}
 			if f.Key {
 				ck++
 				g, c, p := buildGoGetId(f.Type)
