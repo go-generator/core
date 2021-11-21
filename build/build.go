@@ -6,6 +6,34 @@ import (
 	"strings"
 )
 
+var JSTypes = map[string]string{
+	"bool":      "boolean",
+	"byte":      "nummber",
+	"time":      "time",
+	"date":      "date",
+	"datedate":  "datedate",
+	"int8":      "integer",
+	"int16":     "integer",
+	"int32":     "integer",
+	"int64":     "integer",
+	"float32":   "number",
+	"float64":   "number",
+	"decimal":   "number",
+	"string":    "string",
+	"text":      "text",
+	"binary":    "binary",
+	"json":      "object",
+	"xml":       "string",
+	"bool[]":    "primitives",
+	"int8[]":    "primitives",
+	"int16[]":   "primitives",
+	"int32[]":   "primitives",
+	"int64[]":   "primitives",
+	"float32[]": "primitives",
+	"float64[]": "primitives",
+	"decimal[]": "primitives",
+	"string[]":  "primitives",
+}
 func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
 	names := generator.BuildNames(m.Name, ToPlural)
 	collection := make(map[string]interface{}, 0)
@@ -48,6 +76,12 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				sub["type"] = t
 			} else {
 				sub["type"] = f.Type
+			}
+			jt, ok2 := JSTypes[f.Type]
+			if ok2 {
+				sub["jstype"] = jt
+			} else {
+				sub["jstype"] = f.Type
 			}
 			column := f.Column
 			source := f.Source
