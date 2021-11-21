@@ -364,9 +364,9 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]Tables, err
 	return tables, err
 }
 
-func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string) ([]RelTables, error) {
+func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string, primaryKeys map[string][]string) ([]RelTables, error) {
 	driver := s.GetDriver(db)
-	var relTables []RelTables
+	var relations []RelTables
 	var sqliteRels []SqliteRel
 	switch s.GetDriver(db) {
 	case s.DriverSqlite3:
@@ -410,11 +410,10 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 					rel.ReferencedTable = tbNames[i+1]
 					rel.Column = columns[i]
 					rel.ReferencedColumn = columns[i+1]
-					relTables = append(relTables, rel)
+					relations = append(relations, rel)
 				}
 			}
 		}
-		return relTables, err
 	case s.DriverOracle:
 		var relTable []RelTables
 		for i := range tables {
@@ -426,18 +425,39 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 			if err != nil {
 				return nil, err
 			}
-			relTables = append(relTables, relTable...)
+			relations = append(relations, relTable...)
 		}
-		return relTables, nil
 	default:
 		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")
 		if err != nil {
 			return nil, err
 		}
-		err = s.Query(ctx, db, nil, &relTables, listReferenceQuery)
+		err = s.Query(ctx, db, nil, &relations, listReferenceQuery)
 		if err != nil {
 			return nil, err
 		}
-		return relTables, err
 	}
+	for i := range relations {
+		isP1 := IsPrimaryKey(relations[i].Column, relations[i].Table, primaryKeys)
+		isP2 := IsPrimaryKey(relations[i].ReferencedColumn, relations[i].ReferencedTable, primaryKeys)
+		if isP1 && isP2 {
+			if len(primaryKeys[relations[i].Table]) != len(primaryKeys[relations[i].ReferencedTable]) {
+				relations[i].Relationship = OneToMany
+			} else {
+				relations[i].Relationship = OneToOne
+			}
+		} else {
+			relations[i].Relationship = OneToMany
+		}
+	}
+	return relations, nil
 } // Find all columns, table and its referenced columns, tables
+
+func IsPrimaryKey(key, table string, pks map[string][]string) bool {
+	for i := range pks[table] {
+		if key == pks[table][i] {
+			return true
+		}
+	}
+	return false
+}

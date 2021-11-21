@@ -5,9 +5,32 @@ import (
 	"errors"
 	s "github.com/core-go/sql"
 	metadata "github.com/go-generator/core"
+	"os"
 	"path/filepath"
 	"strings"
 )
+
+const (
+	TypesJsonEnv   = "G_TYPES_JSON"
+	WindowsIconEnv = "G_WINDOWS_ICON"
+	AppIconEnv     = "G_APP_ICON"
+	TemplatePath   = "G_TEMPLATE_PATH"
+	ConfigEnv      = "G_CONFIG_PATH"
+)
+
+func SetPathEnv(key, value string) error {
+	path, err := filepath.Abs(value)
+	if err != nil {
+		return err
+	}
+	if os.Getenv(key) == "" {
+		err = os.Setenv(key, path)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
 
 func ConnectDB(dbCache metadata.Database, driver string) (*sql.DB, error) {
 	switch driver {

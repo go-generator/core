@@ -55,44 +55,23 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		if v.ColumnKey == "PRI" {
 			f.Key = true
 		}
-		//rl := getRelationship(v.Column, rt)
-		//if rl != nil {
-		//	var rls metadata.Relationship
-		//	var foreign metadata.Field
-		//	tmpMap := generator.BuildNames(rl.Table)
-		//	foreign.Name = tmpMap["Name"]
-		//	foreign.Source = tmpMap["name"]
-		//	foreign.Type = "*[]" + tmpMap["Name"]
-		//	if rl.Relationship == relationship.ManyToOne && table == rl.ReferencedTable { // have Many to One relation, add a field to the current struct
-		//		rls.Ref = rl.Table
-		//		rls.Fields = append(rls.Fields, metadata.Link{
-		//			Column: rl.Column,
-		//			To:     rl.ReferencedColumn,
-		//		})
-		//		if m.Arrays == nil {
-		//			m.Arrays = append(m.Arrays, rls)
-		//		} else {
-		//			for j := range m.Arrays {
-		//				if m.Arrays[j].Ref == rls.Ref {
-		//					m.Arrays[j].Fields = append(m.Arrays[j].Fields, rls.Fields...)
-		//					break
-		//				}
-		//				if j == len(m.Arrays)-1 {
-		//					m.Arrays = append(m.Arrays, rls)
-		//				}
-		//			}
-		//		}
-		//		for i := range m.Fields {
-		//			if m.Fields[i] == foreign {
-		//				break
-		//			}
-		//			if i == len(m.Fields)-1 {
-		//				m.Fields = append(m.Fields, foreign)
-		//			}
-		//		}
-		//	}
-		//}
 		m.Fields = append(m.Fields, f)
+	}
+	for _, ref := range rt {
+		if ref.Table == table {
+			var relModel metadata.Relationship
+			relModel.Ref = ref.ReferencedTable
+			relModel.Fields = append(relModel.Fields, metadata.Link{
+				Column: ref.Column,
+				To:     ref.ReferencedColumn,
+			})
+			if ref.Relationship == relationship.OneToMany {
+				m.Arrays = append(m.Arrays, relModel)
+			}
+			if ref.Relationship == relationship.OneToOne {
+				m.Ones = append(m.Ones, relModel)
+			}
+		}
 	}
 	return &m, nil
 }
@@ -199,27 +178,18 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 		return err
 	}
 	for i := range st.Fields {
-		if IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
+		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
 		}
 	}
 	st.HasCompositeKey = HasCKey(table, primaryKeys)
 	for i := range st.Fields {
-		if IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
+		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
 		}
 	}
 	st.HasCompositeKey = HasCKey(table, primaryKeys)
 	return nil
-}
-
-func IsPrimaryKey(key, table string, pks map[string][]string) bool {
-	for i := range pks[table] {
-		if key == pks[table][i] {
-			return true
-		}
-	}
-	return false
 }
 
 func HasCKey(table string, pks map[string][]string) bool {
