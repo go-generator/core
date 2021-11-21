@@ -195,6 +195,16 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	} else {
 		env = ParseEnv(project.Env)
 	}
+	if project.Models == nil || len(project.Models) == 0 {
+		if project.Collection != nil && len(project.Collection) > 0 {
+			var models []metadata.Model
+			for _, c := range project.Collection {
+				m := metadata.Model{Name: c}
+				models = append(models, m)
+			}
+			project.Models = models
+		}
+	}
 	for _, m := range project.Models {
 		model := buildModel(m, project.Types, env)
 		entity := Entity{Model: m, Params: model}

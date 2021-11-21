@@ -31,7 +31,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 	collection["tsId"] = "string"
 	collection["goId"] = "string"
 	collection["javaId"] = "String"
-	collection["netId"] = "string"
+	collection["csId"] = "string"
 	collection["goBsonId"] = "_id,omitempty"
 	collection["goGetId"] = "GetRequiredParam"
 	collection["goCheckId"] = "len(id) > 0"
@@ -122,7 +122,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				sub["bson"] = "-"
 				collection["tsId"] = sub["type"]
 				collection["javaId"] = sub["type"]
-				collection["netId"] = sub["type"]
+				collection["csId"] = sub["type"]
 				collection["goId"] = sub["type"]
 				collection["goGetId"] = g
 				collection["goCheckId"] = c
@@ -149,7 +149,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 		if ck > 1 {
 			collection["tsId"] = "any"
 			collection["javaId"] = names["Table"] + "Id"
-			collection["netId"] = names["Table"] + "Id"
+			collection["csId"] = names["Table"] + "Id"
 			collection["goId"] = "interface{}"
 			collection["goBsonId"] = "-"
 			collection["goGetId"] = "GetId"
