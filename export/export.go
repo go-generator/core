@@ -4,19 +4,43 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	s "github.com/core-go/sql"
-	"github.com/go-generator/core"
-	"github.com/go-generator/core/build"
-	edb "github.com/go-generator/core/export/db"
-	"github.com/go-generator/core/export/query"
-	"github.com/go-generator/core/export/relationship"
-	st "github.com/go-generator/core/strings"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	s "github.com/core-go/sql"
+	"github.com/go-generator/core"
+	"github.com/go-generator/core/build"
+	gdb "github.com/go-generator/core/export/db"
+	"github.com/go-generator/core/export/query"
+	"github.com/go-generator/core/export/relationship"
+	st "github.com/go-generator/core/strings"
 )
 
-func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []edb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+var (
+	sqliteNotNullIndex,
+	tableFieldsIndex,
+	primaryKeysIndex map[string]int
+)
+
+func init() {
+	var err error
+	sqliteNotNullIndex, err = s.GetColumnIndexes(reflect.TypeOf(relationship.SqliteNotNull{}))
+	if err != nil {
+		panic(err)
+	}
+	tableFieldsIndex, err = s.GetColumnIndexes(reflect.TypeOf(gdb.TableFields{}))
+	if err != nil {
+		panic(err)
+	}
+	primaryKeysIndex, err = s.GetColumnIndexes(reflect.TypeOf(relationship.PrimaryKey{}))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []gdb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
 	table = strings.ToLower(table)
 	var m metadata.Model
 	var raw string
@@ -79,7 +103,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]string) ([]metadata.Model, error) {
 	var projectModels []metadata.Model
 	for _, t := range tables {
-		var tablesData edb.TableInfo
+		var tablesData gdb.TableInfo
 		err := InitTables(ctx, db, database, t, &tablesData, primaryKeys)
 		if err != nil {
 			return nil, err
@@ -93,7 +117,7 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 	return projectModels, nil
 }
 
-func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb.TableInfo, primaryKeys map[string][]string) error {
+func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb.TableInfo, primaryKeys map[string][]string) error {
 	query := ""
 	switch s.GetDriver(db) {
 	case s.DriverMysql:
@@ -139,14 +163,14 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 		select name as 'column_name', type, pk as 'column_key' from pragma_table_info('%v');`
 		query = fmt.Sprintf(query, table)
 		var notNull []relationship.SqliteNotNull
-		err := s.Query(ctx, db, nil, &st.Fields, query)
+		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 		if err != nil {
 			return err
 		}
 		query = `
 		select * from pragma_table_info('%v');`
 		query = fmt.Sprintf(query, table)
-		err = s.Query(ctx, db, nil, &notNull, query)
+		err = s.Query(ctx, db, sqliteNotNullIndex, &notNull, query)
 		if err != nil {
 			return err
 		}
@@ -173,7 +197,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *edb
 				col.column_id`
 		query = fmt.Sprintf(query, database, table)
 	}
-	err := s.Query(ctx, db, nil, &st.Fields, query)
+	err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 	if err != nil {
 		return err
 	}
@@ -204,7 +228,7 @@ func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, t
 	for _, t := range tables {
 		var keys []relationship.PrimaryKey
 		q, err := query.ListAllPrimaryKeys(dbName, driver, t)
-		err = s.Query(ctx, db, nil, &keys, q)
+		err = s.Query(ctx, db, primaryKeysIndex, &keys, q)
 		if err != nil {
 			return nil, err
 		}
@@ -217,7 +241,7 @@ func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, t
 	return primaryKeys, nil
 }
 
-func sqlitePKMap(st *edb.TableInfo, notNull []relationship.SqliteNotNull) {
+func sqlitePKMap(st *gdb.TableInfo, notNull []relationship.SqliteNotNull) {
 	for i := range st.Fields {
 		if st.Fields[i].ColumnKey == "1" {
 			st.Fields[i].ColumnKey = "PRI"

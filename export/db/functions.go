@@ -5,14 +5,27 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/go-generator/core/export/query"
 	"log"
+	"reflect"
 	"regexp"
 	"strings"
 	"unicode"
 
 	s "github.com/core-go/sql"
+	"github.com/go-generator/core/export/query"
 )
+
+var (
+	tablesIndex map[string]int
+)
+
+func init() {
+	var err error
+	tablesIndex, err = s.GetColumnIndexes(reflect.TypeOf(Tables{}))
+	if err != nil {
+		panic(err)
+	}
+}
 
 type Tables struct {
 	Name string `gorm:"column:table"`
@@ -35,7 +48,7 @@ func ListTables(ctx context.Context, db *sql.DB, database string) ([]string, err
 	if err != nil {
 		return nil, err
 	}
-	err = s.Query(ctx, db, nil, &tables, query)
+	err = s.Query(ctx, db, tablesIndex, &tables, query)
 	if err != nil {
 		return nil, err
 	}

@@ -6,4 +6,5 @@ type Config struct {
 	ProjectPath string `yaml:"project_path" mapstructure:"project_path" json:"projectPath,omitempty" gorm:"column:projectpath" bson:"projectPath,omitempty" dynamodbav:"projectPath,omitempty" firestore:"projectPath,omitempty"`
 	Template    string `yaml:"template" mapstructure:"template" json:"template,omitempty" gorm:"column:template" bson:"template,omitempty" dynamodbav:"template,omitempty" firestore:"template,omitempty"` // Template Path
 	DBCache     string `yaml:"dbcache" mapstructure:"dbcache" json:"dbCache,omitempty" gorm:"column:dbcache" bson:"dbCache,omitempty" dynamodbav:"dbCache,omitempty" firestore:"dbCache,omitempty"`
+	DB          string `yaml:"db" mapstructure:"db" json:"db,omitempty" gorm:"column:db" bson:"db,omitempty" dynamodbav:"db,omitempty" firestore:"db,omitempty"`
 }

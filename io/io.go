@@ -1,9 +1,11 @@
 package io
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/go-generator/core"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -25,6 +27,7 @@ func List(path string) ([]string, error) {
 	}
 	return names, nil
 }
+
 func Load(directory string) (map[string]string, error) {
 	tm := make(map[string]string, 0)
 	names, er1 := List(directory)
@@ -40,6 +43,7 @@ func Load(directory string) (map[string]string, error) {
 	}
 	return tm, nil
 }
+
 func LoadAll(directory string) (map[string]map[string]string, error) {
 	templates := make(map[string]map[string]string)
 	folders, err := List(directory)
@@ -63,6 +67,7 @@ func LoadAll(directory string) (map[string]map[string]string, error) {
 	}
 	return templates, err
 }
+
 func IsValidPath(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -73,10 +78,12 @@ func IsValidPath(path string) bool {
 	}
 	return false
 }
+
 func Exec(program string, arguments []string) ([]byte, error) {
 	cmd := exec.Command(program, arguments...)
 	return cmd.Output()
 }
+
 func MkDir(path string) (err error) {
 	err = os.MkdirAll(path, 0644)
 	if err != nil && os.IsNotExist(err) {
@@ -84,6 +91,7 @@ func MkDir(path string) (err error) {
 	}
 	return
 }
+
 func SaveContent(fullName string, content string) error {
 	err := os.MkdirAll(filepath.Dir(fullName), os.ModePerm)
 	if err != nil {
@@ -91,6 +99,7 @@ func SaveContent(fullName string, content string) error {
 	}
 	return ioutil.WriteFile(fullName, []byte(content), os.ModePerm)
 }
+
 func Save(fullName string, data []byte) error {
 	err := os.MkdirAll(filepath.Dir(fullName), os.ModePerm)
 	if err != nil {
@@ -98,6 +107,7 @@ func Save(fullName string, data []byte) error {
 	}
 	return ioutil.WriteFile(fullName, data, os.ModePerm)
 }
+
 func SaveFiles(rootDirectory string, files []metadata.File) error {
 	for _, v := range files {
 		fullPath := rootDirectory + string(os.PathSeparator) + v.Name
@@ -108,7 +118,8 @@ func SaveFiles(rootDirectory string, files []metadata.File) error {
 	}
 	return nil
 }
-func SaveModels(models []metadata.Model, filePath string, notAppendExt...bool) error {
+
+func SaveModels(models []metadata.Model, filePath string, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&models, "", " ")
 	if err != nil {
 		return err
@@ -124,7 +135,8 @@ func SaveModels(models []metadata.Model, filePath string, notAppendExt...bool) e
 	}
 	return err
 }
-func SaveProject(projectStruct metadata.Project, filePath string, notAppendExt...bool) error {
+
+func SaveProject(projectStruct metadata.Project, filePath string, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&projectStruct, "", " ")
 	if err != nil {
 		return err
@@ -140,10 +152,20 @@ func SaveProject(projectStruct metadata.Project, filePath string, notAppendExt..
 	}
 	return err
 }
+
 func SaveOutput(directory string, output metadata.Output) error {
 	err := SaveFiles(directory, output.Files)
 	if err != nil {
 		return fmt.Errorf("error writing files: %w", err)
 	}
 	return err
+}
+
+func SaveConfig(config metadata.Config, filename string) error {
+	var data bytes.Buffer
+	err := yaml.NewEncoder(&data).Encode(&config)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, data.Bytes(), os.ModePerm)
 }
