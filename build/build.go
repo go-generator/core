@@ -26,7 +26,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 	if len(table) == 0 {
 		table = src
 	}
-	collection["table"] = table
+	collection["Table"] = table
+	collection["table"] = strings.ToLower(table)
 	collection["TABLE"] = strings.ToUpper(table)
 	collection["source"] = src
 	collection["tsId"] = "string"
@@ -88,36 +89,37 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			}
 			sub["key"] = f.Key
 			sub["source"] = source
-			sub["column"] = column
+			sub["Column"] = column
+			sub["column"] = strings.ToLower(column)
 			sub["COLUMN"] = strings.ToUpper(column)
 			sub["length"] = f.Length
 			sub["maxlength"] = f.Length
 			sub["env"] = env
 			if re.MatchString(x) {
 				sub["goFilterType"] = "*TimeRange"
-				sub["tsFilterType"] = "Date|DateRange"
+				sub["tsFilterType"] = "Date | DateRange"
 				sub["javaFilterType"] = "DateRange"
 				sub["csFilterType"] = "DateTimeRange"
 			} else if x == "float64" || x == "decimal" || x == "float64[]" || x == "decimal[]" {
 				sub["goFilterType"] = "*NumberRange"
-				sub["tsFilterType"] = "number|NumberRange"
+				sub["tsFilterType"] = "number | NumberRange"
 				sub["javaFilterType"] = "NumberRange"
 				sub["csFilterType"] = "NumberRange"
 			} else if x == "int64" || x == "int64[]" {
 				sub["goFilterType"] = "*Int64Range"
-				sub["tsFilterType"] = "number|NumberRange"
+				sub["tsFilterType"] = "number | NumberRange"
 				sub["javaFilterType"] = "Int64Range"
 				sub["csFilterType"] = "Int64Range"
 			} else if x == "float32" || x == "float32[]" {
 				sub["goFilterType"] = "*NumberRange"
-				sub["tsFilterType"] = "number|NumberRange"
+				sub["tsFilterType"] = "number | NumberRange"
 				sub["javaFilterType"] = "FloatRange"
 				sub["csFilterType"] = "FloatRange"
 				sub["javaFilterType"] = "Int32Range"
 				sub["csFilterType"] = "Int32Range"
 			} else if x == "int32" || x == "int32[]" {
 				sub["goFilterType"] = "*Int32Range"
-				sub["tsFilterType"] = "number|NumberRange"
+				sub["tsFilterType"] = "number | NumberRange"
 			} else {
 				stp := sub["type"]
 				sub["goFilterType"] = stp
