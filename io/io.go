@@ -119,7 +119,7 @@ func SaveFiles(rootDirectory string, files []metadata.File) error {
 	return nil
 }
 
-func SaveModels(models []metadata.Model, filePath string, notAppendExt ...bool) error {
+func SaveModels(filePath string, models []metadata.Model, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&models, "", " ")
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func SaveModels(models []metadata.Model, filePath string, notAppendExt ...bool) 
 	return err
 }
 
-func SaveProject(projectStruct metadata.Project, filePath string, notAppendExt ...bool) error {
+func SaveProject(filePath string, projectStruct metadata.Project, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&projectStruct, "", " ")
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func SaveOutput(directory string, output metadata.Output) error {
 	return err
 }
 
-func SaveConfig(config metadata.Config, filename string) error {
+func SaveConfig(filename string, config metadata.Config) error {
 	var data bytes.Buffer
 	err := yaml.NewEncoder(&data).Encode(&config)
 	if err != nil {
