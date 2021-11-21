@@ -88,24 +88,24 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				sub["tsFilterType"] = "Date|DateRange"
 				sub["javaFilterType"] = "DateRange"
 				sub["csFilterType"] = "DateTimeRange"
-			} else if x == "float64" {
+			} else if x == "float64" || x == "decimal" || x == "float64[]" || x == "decimal[]"{
 				sub["goFilterType"] = "*NumberRange"
 				sub["tsFilterType"] = "number|NumberRange"
 				sub["javaFilterType"] = "NumberRange"
 				sub["csFilterType"] = "NumberRange"
-			} else if x == "int64" {
+			} else if x == "int64" || x == "int64[]" {
 				sub["goFilterType"] = "*Int64Range"
 				sub["tsFilterType"] = "number|NumberRange"
 				sub["javaFilterType"] = "Int64Range"
 				sub["csFilterType"] = "Int64Range"
-			} else if x == "float32" {
+			} else if x == "float32" || x == "float32[]" {
 				sub["goFilterType"] = "*NumberRange"
 				sub["tsFilterType"] = "number|NumberRange"
 				sub["javaFilterType"] = "FloatRange"
 				sub["csFilterType"] = "FloatRange"
 				sub["javaFilterType"] = "Int32Range"
 				sub["csFilterType"] = "Int32Range"
-			} else if x == "int32" {
+			} else if x == "int32" || x == "int32[]" {
 				sub["goFilterType"] = "*Int32Range"
 				sub["tsFilterType"] = "number|NumberRange"
 			} else {
