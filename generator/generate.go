@@ -203,6 +203,8 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 		}
 	}
 	for _, m := range project.Models {
+		model := buildModel(m, project.Types, env)
+		entity := Entity{Model: m, Params: model}
 		hasTime := HasTime(project.Models, m.Name)
 		if _, ok := project.Env["layer"]; !ok {
 			for _, f := range m.Arrays {
@@ -212,8 +214,6 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 				}
 			}
 		}
-		model := buildModel(m, project.Types, env)
-		entity := Entity{Model: m, Params: model}
 		if m.Ones != nil && len(m.Ones) > 0 {
 			var ones []map[string]interface{}
 			for _, c := range m.Ones {

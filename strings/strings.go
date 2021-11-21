@@ -19,11 +19,11 @@ func ToCamelCase(s string) string {
 	if len(s) <= 2 {
 		return strings.ToLower(s)
 	} else {
-		return strings.ToLower(string(s[0])) + s[1:]
+		return strings.ToLower(string(s[0])) + strings.ToLower(s[1:])
 	}
 }
 func ToPascalCase(s string) string {
-	return strings.ToUpper(string(s[0])) + s[1:]
+	return strings.ToUpper(string(s[0])) + strings.ToLower(s[1:])
 }
 func ToSingular(s string) string {
 	if len(s) <= 1 {
@@ -66,7 +66,7 @@ func BuildSnakeName(s string) string {
 	s2 := strings.ToLower(s)
 	s3 := ""
 	for i := range s {
-		if s2[i] != s[i] {
+		if strings.ToLower(string(s2[i])) != strings.ToLower(string(s[i])) {
 			s3 += "_" + string(s2[i])
 		} else {
 			s3 += string(s2[i])

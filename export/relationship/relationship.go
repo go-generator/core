@@ -103,17 +103,13 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 			}
 		}
 	case d.Oracle:
-		var relTable []RelTables
-		for i := range tables {
-			q, err := query.ListReferenceQuery(database, driver, tables[i])
-			if err != nil {
-				return nil, err
-			}
-			err = s.Query(ctx, db, relTableIndex, &relTable, q)
-			if err != nil {
-				return nil, err
-			}
-			relations = append(relations, relTable...)
+		q, err := query.ListReferenceQuery(database, driver, "")
+		if err != nil {
+			return nil, err
+		}
+		err = s.Query(ctx, db, relTableIndex, &relations, q)
+		if err != nil {
+			return nil, err
 		}
 	default:
 		listReferenceQuery, err := query.ListReferenceQuery(database, driver, "")

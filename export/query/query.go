@@ -3,6 +3,7 @@ package query
 import (
 	"errors"
 	"fmt"
+
 	d "github.com/go-generator/core/driver"
 )
 
@@ -225,22 +226,23 @@ func ListReferenceQuery(database, driver, table string) (string, error) {
 	case d.Oracle:
 		query := `
 		SELECT
-			b.table_name AS "table",
-			b.column_name AS "column",
-			a.table_name AS "referenced_table",
-			a.column_name AS "referenced_column"
+			uc_r.table_name AS "table",
+			ucc_r.column_name AS "column",
+			uc_p.table_name AS "referenced_table",
+			ucc_p.column_name AS "referenced_column"
 		FROM
-			all_cons_columns a
-		JOIN all_constraints c ON
-			a.owner = c.owner
-			AND a.constraint_name = c.constraint_name
-		JOIN all_cons_columns b ON
-			c.owner = b.owner
-			AND c.r_constraint_name = b.constraint_name
+			user_constraints uc_r
+		JOIN user_cons_columns ucc_r ON
+			ucc_r.constraint_name = uc_r.constraint_name
+		JOIN user_constraints uc_p ON
+			uc_p.constraint_name = uc_r.r_constraint_name
+		JOIN user_cons_columns ucc_p ON
+			ucc_p.constraint_name = uc_p.constraint_name
+			AND ucc_p.position = ucc_r.position
 		WHERE
-			c.constraint_type = 'R'
-			AND a.table_name = '%v'`
-		return fmt.Sprintf(query, table), nil
+			uc_r.constraint_type = 'R'
+			AND UC_R.owner = '%v'`
+		return fmt.Sprintf(query, database), nil
 	default:
 		return "", errors.New(d.NotSupport)
 	}
