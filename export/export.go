@@ -9,6 +9,7 @@ import (
 	edb "github.com/go-generator/core/export/db"
 	"github.com/go-generator/core/export/relationship"
 	"github.com/go-generator/core/generator"
+	st "github.com/go-generator/core/strings"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,10 +17,17 @@ import (
 
 func ToModel(types map[string]string, table string, rt []relationship.RelTables, hasCompositeKey bool, sqlTable []edb.TableFields) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
 	var m metadata.Model
-	tableNames := generator.BuildNames(table)
+	var raw string
+	if !strings.Contains(table, "_") {
+		raw = st.BuildSnakeName(table)
+	} else {
+		raw = st.UnBuildSnakeName(strings.ToLower(table))
+	}
+	n := st.ToSingular(raw)
+	tableNames := generator.BuildNames(n)
 	m.Name = tableNames["Name"]
-	m.Table = tableNames["name"]
-	m.Source = tableNames["name"]
+	m.Table = table
+	m.Source = table
 	for _, v := range sqlTable {
 		colNames := generator.BuildNames(v.Column)
 		var f metadata.Field

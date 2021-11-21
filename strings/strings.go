@@ -44,3 +44,31 @@ func ToPlural(s string) string {
 	}
 	return s[0:] + "s"
 }
+func BuildSnakeName(s string) string {
+	s2 := strings.ToLower(s)
+	s3 := ""
+	for i := range s {
+		if s2[i] != s[i] {
+			s3 += "_" + string(s2[i])
+		} else {
+			s3 += string(s2[i])
+		}
+	}
+	if string(s3[0]) == "_" {
+		return s3[1:]
+	}
+	return s3
+}
+func UnBuildSnakeName(s string) string {
+	s2 := strings.ToUpper(s)
+	s1 := string(s[0])
+	for i := 1; i < len(s); i++ {
+		if string(s[i-1]) == "_" {
+			s1 = s1[:len(s1)-1]
+			s1 += string(s2[i])
+		} else {
+			s1 += string(s[i])
+		}
+	}
+	return s1
+}

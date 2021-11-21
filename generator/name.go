@@ -1,6 +1,9 @@
 package generator
 
-import "strings"
+import (
+	st "github.com/go-generator/core/strings"
+	"strings"
+)
 
 func BuildNames(name string, options ...func(string) string) map[string]string {
 	var toPlural func(string) string
@@ -10,10 +13,10 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	n := make(map[string]string)
 	var raw string
 	if !strings.Contains(name, "_") {
-		raw = BuildSnakeName(name)
+		raw = st.BuildSnakeName(name)
 	} else {
 		raw = strings.ToLower(name)
-		name = UnBuildSnakeName(raw)
+		name = st.UnBuildSnakeName(raw)
 	}
 	n = map[string]string{
 		"raw":      raw,
@@ -27,7 +30,7 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 		return n
 	}
 	raws := toPlural(raw)
-	names := UnBuildSnakeName(raws)
+	names := st.UnBuildSnakeName(raws)
 	n["raws"] = raws
 	n["names"] = strings.ToLower(string(names[0])) + names[1:]
 	n["Names"] = strings.ToUpper(string(names[0])) + names[1:]
@@ -35,34 +38,6 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	n["constants"] = strings.ToUpper(raws)
 	n["lowers"] = strings.ToLower(names)
 	return n
-}
-func BuildSnakeName(s string) string {
-	s2 := strings.ToLower(s)
-	s3 := ""
-	for i := range s {
-		if s2[i] != s[i] {
-			s3 += "_" + string(s2[i])
-		} else {
-			s3 += string(s2[i])
-		}
-	}
-	if string(s3[0]) == "_" {
-		return s3[1:]
-	}
-	return s3
-}
-func UnBuildSnakeName(s string) string {
-	s2 := strings.ToUpper(s)
-	s1 := string(s[0])
-	for i := 1; i < len(s); i++ {
-		if string(s[i-1]) == "_" {
-			s1 = s1[:len(s1)-1]
-			s1 += string(s2[i])
-		} else {
-			s1 += string(s[i])
-		}
-	}
-	return s1
 }
 func InitEnv(env map[string]string, projectName string) map[string]string {
 	init, ok := env["init"]
@@ -88,17 +63,17 @@ func InitEnv(env map[string]string, projectName string) map[string]string {
 func buildProjectName(name string) map[string]string {
 	var raw string
 	if !strings.Contains(name, "_") {
-		raw = BuildSnakeName(name)
+		raw = st.BuildSnakeName(name)
 	} else {
 		raw = strings.ToLower(name)
-		name = UnBuildSnakeName(raw)
+		name = st.UnBuildSnakeName(raw)
 	}
 	return map[string]string{
 		"project_raw":      raw,
 		"project":          strings.ToLower(string(name[0])) + name[1:],
 		"Project":          strings.ToUpper(string(name[0])) + name[1:],
 		"project_lower":    strings.ToLower(name),
-		"project_name":     BuildSnakeName(name),
+		"project_name":     st.BuildSnakeName(name),
 		"project_constant": strings.ToUpper(raw),
 	}
 }
