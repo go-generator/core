@@ -60,8 +60,14 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		m.Table = origin
 	}
 	for _, v := range sqlTable {
-		colNames := build.BuildNames(v.Column)
 		var f metadata.Field
+		org := v.Column
+		colNames := build.BuildNames(v.Column)
+		if colNames["Name"] == org || colNames["name"] == org {
+			f.Name = org
+		} else {
+			f.Name = colNames["Name"]
+		}
 		if v.Column == colNames["Name"] || v.Column == colNames["name"] {
 			f.Name = v.Column
 		} else {
@@ -82,7 +88,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		m.Fields = append(m.Fields, f)
 	}
 	for _, ref := range rt {
-		if ref.Table == table {
+		if ref.Table == origin {
 			refNames := build.BuildNames(ref.ReferencedTable)
 			var relModel metadata.Relationship
 			relModel.Ref = ref.ReferencedTable
@@ -149,13 +155,18 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		}
 	case d.Postgres:
 		query = `
-			SELECT TABLE_NAME AS TABLE,
-				COLUMN_NAME,
-				IS_NULLABLE,
-				CHARACTER_MAXIMUM_LENGTH AS LENGTH,
-				UDT_NAME AS TYPE
-			FROM INFORMATION_SCHEMA.COLUMNS
-			WHERE TABLE_NAME = '%v';`
+			select
+				table_name as "table",
+				column_name,
+				is_nullable,
+				character_maximum_length as "length",
+				udt_name as "type",
+				numeric_scale as "scale",
+				numeric_precision as "precision"
+			from
+				information_schema.columns
+			where
+				table_name = '%v';`
 		query = fmt.Sprintf(query, table)
 		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 		if err != nil {

@@ -103,6 +103,27 @@ func ImportDriver(s string) string {
 		return `_ "github.com/mattn/go-sqlite3"`
 	case DriverOracle:
 		return `_ "github.com/godror/godror"`
+	case "godror":
+		return `_ "github.com/godror/godror"`
+	default:
+		return ""
+	}
+}
+
+func ImportGoMod(s string) string {
+	switch s {
+	case DriverMysql:
+		return `github.com/go-sql-driver/mysql v1.6.0`
+	case DriverMssql:
+		return `github.com/denisenkom/go-mssqldb v0.11.0`
+	case DriverPostgres:
+		return `github.com/lib/pq v1.10.3`
+	case DriverSqlite3:
+		return `github.com/mattn/go-sqlite3 v1.14.9`
+	case DriverOracle:
+		return `github.com/godror/godror v0.29.0`
+	case "godror":
+		return `github.com/godror/godror v0.29.0`
 	default:
 		return ""
 	}

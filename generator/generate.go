@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/build"
-	st "github.com/go-generator/core/strings"
 	"github.com/go-generator/core/types"
 )
 
@@ -146,7 +144,7 @@ func Generate(
 
 func InCollection(collection []string, name string) bool {
 	for _, c := range collection {
-		if strings.Compare(st.ToCamelCase(name), st.ToCamelCase(c)) == 0 {
+		if strings.Compare(strings.ToLower(name), strings.ToLower(c)) == 0 {
 			return true
 		}
 	}
@@ -204,17 +202,18 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 			project.Models = models
 		}
 	}
-
 	for _, m := range project.Models {
-		hasTime := false
-		model := buildModel(m, project.Types, env)
-		entity := Entity{Model: m, Params: model}
-		for _, f := range m.Arrays {
-			if HasTime(project.Models, f.Ref) {
-				hasTime = true
-				break
+		hasTime := HasTime(project.Models, m.Name)
+		if _, ok := project.Env["layer"]; !ok {
+			for _, f := range m.Arrays {
+				if HasTime(project.Models, f.Ref) {
+					hasTime = true
+					break
+				}
 			}
 		}
+		model := buildModel(m, project.Types, env)
+		entity := Entity{Model: m, Params: model}
 		if m.Ones != nil && len(m.Ones) > 0 {
 			var ones []map[string]interface{}
 			for _, c := range m.Ones {
@@ -246,17 +245,16 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 				s := GetModel(project.Models, c.Model)
 				if s != nil {
 					sub := buildModel(*s, project.Types, env)
-					arrays = append(arrays, sub)
 					if s.Arrays == nil || len(s.Arrays) == 0 {
 						sub["leaf"] = true
 					}
+					sub["parent"] = m.Name
+					arrays = append(arrays, sub)
 				}
 			}
 			model["arrays"] = arrays
 		}
-		if _, ok := project.Env["layer"]; ok {
-			model["time"] = hasTime
-		}
+		model["time"] = hasTime
 		entities = append(entities, entity)
 		collections = append(collections, model)
 	}
@@ -264,11 +262,11 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 }
 
 func HasTime(models []metadata.Model, name string) bool {
-	var re = regexp.MustCompile(`date|datetime|time.Time`)
 	for i := range models {
-		if models[i].Table == name {
+		if models[i].Table == name || models[i].Name == name {
 			for _, f := range models[i].Fields {
-				if re.MatchString(f.Type) {
+				if strings.Contains(f.Type, "date") ||
+					strings.Contains(f.Type, "time") {
 					return true
 				}
 			}

@@ -18,5 +18,6 @@ func MakeFuncMap() template.FuncMap {
 	funcMap["camel"] = st.ToCamelCase
 	funcMap["pascal"] = st.ToPascalCase
 	funcMap["go_driver"] = st.ImportDriver
+	funcMap["go_mod_import"] = st.ImportGoMod
 	return funcMap
 }
