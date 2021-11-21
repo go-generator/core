@@ -138,6 +138,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			if f.Key {
 				ck++
 				g, c, p := buildGoGetId(f.Type)
+				sub["bson"] = "-"
 				collection["tsId"] = sub["type"]
 				collection["javaId"] = sub["type"]
 				collection["netId"] = sub["type"]
@@ -148,6 +149,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				collection["goIdType"] = f.Type
 				goIds = append(goIds, "{"+tmp["name"]+"}")
 				tsIds = append(tsIds, ":"+tmp["name"])
+			} else {
+				sub["bson"] = f.Name + ",omitempty"
 			}
 			fields = append(fields, sub)
 		}
@@ -174,6 +177,19 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			collection["goIdType"] = "map[string]interface{}"
 			collection["go_id_url"] = strings.Join(goIds, "/")
 			collection["ts_id_url"] = strings.Join(tsIds, "/")
+		} else if ck == 1 {
+			for _, sub := range fields {
+				k, ok := sub["key"]
+				if ok {
+					k0, ok2 := k.(bool)
+					if ok2 {
+						if k0 {
+							sub["bson"] = "_id,omitempty"
+							break
+						}
+					}
+				}
+			}
 		}
 		collection["fields"] = fields
 	}
