@@ -53,7 +53,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	} else {
 		raw = st.UnBuildSnakeName(strings.ToLower(table))
 	}
-	n := pluralize.Singular(raw) //st.ToSingular(raw)
+	n := pluralize.Singular(raw)
 	tableNames := build.BuildNames(n)
 	if tableNames["Name"] == origin || tableNames["name"] == origin {
 		m.Name = origin

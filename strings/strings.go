@@ -1,6 +1,10 @@
 package strings
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/stoewer/go-strcase"
+)
 
 const (
 	DriverPostgres = "postgres"
@@ -19,7 +23,7 @@ func ToCamelCase(s string) string {
 	if len(s) <= 2 {
 		return strings.ToLower(s)
 	} else {
-		return strings.ToLower(string(s[0])) + s[1:]
+		return strcase.LowerCamelCase(s)
 	}
 }
 
@@ -94,7 +98,7 @@ func BuildSnakeName(s string) string {
 	s2 := strings.ToLower(s)
 	s3 := ""
 	for i := range s {
-		if strings.ToLower(string(s2[i])) != strings.ToLower(string(s[i])) {
+		if s2[i] != s[i] {
 			s3 += "_" + string(s2[i])
 		} else {
 			s3 += string(s2[i])

@@ -1,8 +1,10 @@
 package build
 
 import (
-	st "github.com/go-generator/core/strings"
 	"strings"
+
+	st "github.com/go-generator/core/strings"
+	"github.com/stoewer/go-strcase"
 )
 
 func BuildNames(name string, options ...func(string) string) map[string]string {
@@ -13,12 +15,12 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	n := make(map[string]string)
 	var raw string
 	if !strings.Contains(name, "_") {
-		raw = st.BuildSnakeName(name)
+		raw = strcase.SnakeCase(name) //st.BuildSnakeName(name)
 	} else {
 		raw = strings.ToLower(name)
-		name = st.UnBuildSnakeName(raw)
+		name = strcase.LowerCamelCase(raw) //st.UnBuildSnakeName(raw)
 	}
-	path := strings.Replace(raw, "_", "-", -1)
+	path := strcase.KebabCase(raw) //strings.Replace(raw, "_", "-", -1)
 	n = map[string]string{
 		"raw":      raw,
 		"path":     path,
@@ -33,7 +35,7 @@ func BuildNames(name string, options ...func(string) string) map[string]string {
 	}
 	raws := toPlural(raw)
 	paths := strings.Replace(raws, "_", "-", -1)
-	names := st.UnBuildSnakeName(raws)
+	names := strcase.LowerCamelCase(raws)
 	n["raws"] = raws
 	n["paths"] = paths
 	n["names"] = st.ToCamelCase(names)
