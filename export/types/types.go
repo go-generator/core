@@ -142,5 +142,7 @@ var Types = map[string]map[string]string{
 		"NUMBER(4,0)": "int16",
 		"NUMBER(6,0)": "int32",
 		"NUMBER(7,0)": "int64",
+		"TIMESTAMP(6)": "datetime",
+		"TIMESTAMP(6) WITH TIME ZONE": "datetime",
 	},
 }

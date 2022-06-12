@@ -42,15 +42,13 @@ func ListTablesQuery(database, dbname, driver string) (string, error) {
 			name NOT LIKE 'sqlite_%';`, nil
 	case d.Oracle:
 		query := `
-		SELECT
-			DISTINCT OWNER,
-			OBJECT_NAME "table"
+		SELECT distinct
+  			table_name as "table"
 		FROM
-			DBA_OBJECTS
-		WHERE
-			OBJECT_TYPE = 'TABLE'
-			AND OWNER = '%v'`
-		return fmt.Sprintf(query, dbname), nil
+  			user_tables
+		ORDER BY
+  			table_name `
+		return query, nil
 	default:
 		return "", errors.New("unsupported driver")
 	}

@@ -258,14 +258,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			FROM
 				sys.all_tab_columns col
 			INNER JOIN sys.all_tables t ON
-				col.owner = t.owner
-				AND col.table_name = t.table_name
-			WHERE
-				col.owner = '%v'
-				AND col.table_name = '%v'
+				col.table_name = t.table_name
+			WHERE col.table_name = '%v'
 			ORDER BY
 				col.column_id`
-		query = fmt.Sprintf(query, database, table)
+		query = fmt.Sprintf(query, table)
 		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 		if err != nil {
 			return err
