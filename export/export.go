@@ -98,6 +98,8 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 			f.Name = colNames["Name"]
 		}
 		f.Type = types[v.DataType]
+		f.DbType = v.DbType
+		f.FullDbType = v.FullDataType
 		if v.Length != nil {
 			l, err := strconv.Atoi(*v.Length)
 			if err != nil {
@@ -176,6 +178,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		if err != nil {
 			return err
 		}
+		for i := range st.Fields {
+			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
+				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			}
+		}
 	case d.Postgres:
 		query = `
 			select
@@ -195,6 +202,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		if err != nil {
 			return err
 		}
+		for i := range st.Fields {
+			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") && strings.Index(st.Fields[i].DataType, "_") < 0 {
+				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			}
+		}
 	case d.Mssql:
 		query = `
 			select
@@ -211,6 +223,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		err := s.Query(ctx, db, tableFieldsIndex, &st.Fields, query)
 		if err != nil {
 			return err
+		}
+		for i := range st.Fields {
+			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
+				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			}
 		}
 	case d.Sqlite3:
 		query = `
@@ -234,6 +251,9 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
+			if st.Fields[i].Length != nil && (st.Fields[i].DataType == "TEXT" || strings.Contains(st.Fields[i].DataType, "CHAR")) {
+				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			}
 			for j := range notNull {
 				if st.Fields[i].Column == notNull[j].Name {
 					if notNull[j].NotNull {
@@ -267,8 +287,14 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		if err != nil {
 			return err
 		}
+		for i := range st.Fields {
+			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "CHAR") {
+				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
+			}
+		}
 	}
 	for i := range st.Fields {
+		st.Fields[i].DbType = st.Fields[i].DataType
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
 		}

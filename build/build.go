@@ -72,6 +72,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			} else {
 				sub["type"] = f.Type
 			}
+			sub["dbType"] = f.DbType
+			sub["fullDbType"] = f.FullDbType
 			jt, ok2 := jstypes.JSTypes[f.Type]
 			if ok2 {
 				if jt == "number" || jt == "integer" {
