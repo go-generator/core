@@ -130,7 +130,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["COLUMN"] = strings.ToUpper(column)
 			sub["length"] = f.Length
 			sub["maxlength"] = f.Length
-			sub["env"] = env
+			sub["env"] = &env
+			sub["parent"] = &collection
 			if re.MatchString(x) {
 				sub["goFilterType"] = "*TimeRange"
 				sub["tsFilterType"] = "Date | DateRange"
