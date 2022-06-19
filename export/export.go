@@ -184,6 +184,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		for i := range st.Fields {
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			} else {
+				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
 	case d.Postgres:
@@ -208,6 +210,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		for i := range st.Fields {
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") && strings.Index(st.Fields[i].DataType, "_") < 0 {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			} else {
+				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
 	case d.Mssql:
@@ -230,6 +234,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		for i := range st.Fields {
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			} else {
+				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
 	case d.Sqlite3:
@@ -256,6 +262,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		for i := range st.Fields {
 			if st.Fields[i].Length != nil && (st.Fields[i].DataType == "TEXT" || strings.Contains(st.Fields[i].DataType, "CHAR")) {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+			} else {
+				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 			for j := range notNull {
 				if st.Fields[i].Column == notNull[j].Name {
@@ -293,6 +301,8 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		for i := range st.Fields {
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "CHAR") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
+			} else {
+				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
 	}
