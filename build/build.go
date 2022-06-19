@@ -7,7 +7,26 @@ import (
 	"github.com/gertd/go-pluralize"
 	"github.com/go-generator/core"
 	"github.com/go-generator/core/jstypes"
+	"github.com/google/uuid"
+	"github.com/teris-io/shortid"
 )
+
+var sid *shortid.Shortid
+func ShortId() (string, error) {
+	if sid == nil {
+		s, err := shortid.New(1, shortid.DefaultABC, 2342)
+		if err != nil {
+			return "", err
+		}
+		sid = s
+	}
+	return sid.Generate()
+}
+
+func RandomId() string {
+	id := uuid.New()
+	return strings.Replace(id.String(), "-", "", -1)
+}
 
 func MergeMap(m map[string]interface{}, sub map[string]string) {
 	for k, v := range sub {
@@ -28,6 +47,11 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 	if len(table) == 0 {
 		table = src
 	}
+	id, er := ShortId()
+	if er == nil {
+		collection["id"] = id
+	}
+	collection["uuid"] = RandomId()
 	collection["Table"] = table
 	collection["table"] = strings.ToLower(table)
 	collection["TABLE"] = strings.ToUpper(table)
@@ -63,6 +87,11 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				collection["ts_date"] = "DateRange, "
 				hasTime = true
 			}
+			id, er = ShortId()
+			if er == nil {
+				sub["id"] = id
+			}
+			sub["uuid"] = RandomId()
 			sub["simpleTypes"] = f.Type
 			t, ok := types[f.Type]
 			ut := f.Type
