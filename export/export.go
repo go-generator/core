@@ -100,6 +100,9 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		f.Type = types[v.DataType]
 		f.DbType = v.DbType
 		f.FullDbType = v.FullDataType
+		if v.IsNullable == "0" {
+			f.Required = true
+		}
 		if v.Length != nil {
 			l, err := strconv.Atoi(*v.Length)
 			if err != nil {
