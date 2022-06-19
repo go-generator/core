@@ -182,6 +182,12 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
+			s := strings.TrimSpace(st.Fields[i].IsNullable)
+			if s == "YES" {
+				st.Fields[i].IsNullable = "1"
+			} else {
+				st.Fields[i].IsNullable = "0"
+			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -208,6 +214,12 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
+			s := strings.TrimSpace(st.Fields[i].IsNullable)
+			if s == "YES" {
+				st.Fields[i].IsNullable = "1"
+			} else {
+				st.Fields[i].IsNullable = "0"
+			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") && strings.Index(st.Fields[i].DataType, "_") < 0 {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -232,6 +244,12 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
+			s := strings.TrimSpace(st.Fields[i].IsNullable)
+			if s == "YES" {
+				st.Fields[i].IsNullable = "1"
+			} else {
+				st.Fields[i].IsNullable = "0"
+			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -299,6 +317,12 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
+			s := strings.TrimSpace(st.Fields[i].IsNullable)
+			if s == "Y" {
+				st.Fields[i].IsNullable = "1"
+			} else {
+				st.Fields[i].IsNullable = "0"
+			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "CHAR") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
