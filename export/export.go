@@ -311,7 +311,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		st.Fields[i].DbType = st.Fields[i].DataType
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
-			st.Fields[i].KeyName = primaryKeys[table][i].KeyName
+			for _, key := range primaryKeys[table] {
+				if st.Fields[i].Column == key.Column {
+					st.Fields[i].KeyName = key.KeyName
+				}
+			}
 		}
 	}
 	mapDataType(driver, st)
@@ -319,7 +323,11 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 	for i := range st.Fields {
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
-			st.Fields[i].KeyName = primaryKeys[table][i].KeyName
+			for _, key := range primaryKeys[table] {
+				if st.Fields[i].Column == key.Column {
+					st.Fields[i].KeyName = key.KeyName
+				}
+			}
 		}
 	}
 	st.HasCompositeKey = HasCKey(table, primaryKeys)
