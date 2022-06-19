@@ -44,7 +44,7 @@ type ColumnRelation struct {
 // 1-n -> only one field is unique
 // n-n -> both fields are not unique
 // self reference will be in the same table with the same datatype
-func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string, primaryKeys map[string][]string) ([]RelTables, error) {
+func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tables []string, primaryKeys map[string][]PrimaryKey) ([]RelTables, error) {
 	driver := s.GetDriver(db)
 	var (
 		relations  []RelTables
@@ -185,9 +185,9 @@ func GetRelationshipTable(ctx context.Context, db *sql.DB, database string, tabl
 	return relations, nil
 } // Find all columns, table and its referenced columns, tables
 
-func IsPrimaryKey(key, table string, pks map[string][]string) bool {
+func IsPrimaryKey(key, table string, pks map[string][]PrimaryKey) bool {
 	for i := range pks[table] {
-		if key == pks[table][i] {
+		if key == pks[table][i].Column {
 			return true
 		}
 	}

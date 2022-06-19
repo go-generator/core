@@ -159,7 +159,8 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 		query := `
 		SELECT
 		all_cons_columns.table_name AS "table",
-		all_cons_columns.column_name AS "column"
+		all_cons_columns.column_name AS "column",
+		all_constraints.constraint_name  AS "key_name"
 		FROM
 			all_constraints,
 			all_cons_columns
@@ -168,12 +169,11 @@ func ListAllPrimaryKeys(database, driver, table string) (string, error) {
 			AND all_constraints.constraint_name = all_cons_columns.constraint_name
 			AND all_constraints.owner = all_cons_columns.owner
 			AND all_cons_columns.table_name = '%v'
-			AND all_cons_columns.owner = '%v'
 		ORDER BY
 			all_cons_columns.owner,
 			all_cons_columns.table_name,
 			all_cons_columns.position`
-		return fmt.Sprintf(query, table, database), nil
+		return fmt.Sprintf(query, table), nil
 	}
 	return query, nil
 }

@@ -32,4 +32,5 @@ type SqliteNotNull struct {
 
 type PrimaryKey struct {
 	Column string `gorm:"column:column"`
+	KeyName string `gorm:"column:key_name"`
 }

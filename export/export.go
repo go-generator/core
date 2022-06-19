@@ -100,6 +100,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		f.Type = types[v.DataType]
 		f.DbType = v.DbType
 		f.FullDbType = v.FullDataType
+		f.KeyName = v.KeyName
 		if v.IsNullable == "0" {
 			f.Required = true
 		}
@@ -139,7 +140,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	return &m, nil
 }
 
-func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]string, options...string) ([]metadata.Model, error) {
+func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]relationship.PrimaryKey, options...string) ([]metadata.Model, error) {
 	var projectModels []metadata.Model
 	for _, t := range tables {
 		var tablesData gdb.TableInfo
@@ -156,7 +157,7 @@ func ToModels(ctx context.Context, db *sql.DB, database string, tables []string,
 	return projectModels, nil
 }
 
-func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb.TableInfo, primaryKeys map[string][]string) error {
+func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb.TableInfo, primaryKeys map[string][]relationship.PrimaryKey) error {
 	query := ""
 	driver := s.GetDriver(db)
 	switch driver {
@@ -182,12 +183,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
-			s := strings.TrimSpace(st.Fields[i].IsNullable)
-			if s == "YES" {
-				st.Fields[i].IsNullable = "1"
-			} else {
-				st.Fields[i].IsNullable = "0"
-			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -214,12 +209,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
-			s := strings.TrimSpace(st.Fields[i].IsNullable)
-			if s == "YES" {
-				st.Fields[i].IsNullable = "1"
-			} else {
-				st.Fields[i].IsNullable = "0"
-			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") && strings.Index(st.Fields[i].DataType, "_") < 0 {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -244,12 +233,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
-			s := strings.TrimSpace(st.Fields[i].IsNullable)
-			if s == "YES" {
-				st.Fields[i].IsNullable = "1"
-			} else {
-				st.Fields[i].IsNullable = "0"
-			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -317,12 +300,6 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
-			s := strings.TrimSpace(st.Fields[i].IsNullable)
-			if s == "Y" {
-				st.Fields[i].IsNullable = "1"
-			} else {
-				st.Fields[i].IsNullable = "0"
-			}
 			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "CHAR") {
 				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
 			} else {
@@ -334,6 +311,7 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 		st.Fields[i].DbType = st.Fields[i].DataType
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
+			st.Fields[i].KeyName = primaryKeys[table][i].KeyName
 		}
 	}
 	mapDataType(driver, st)
@@ -341,21 +319,22 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 	for i := range st.Fields {
 		if relationship.IsPrimaryKey(st.Fields[i].Column, table, primaryKeys) {
 			st.Fields[i].ColumnKey = "PRI"
+			st.Fields[i].KeyName = primaryKeys[table][i].KeyName
 		}
 	}
 	st.HasCompositeKey = HasCKey(table, primaryKeys)
 	return nil
 }
 
-func HasCKey(table string, pks map[string][]string) bool {
+func HasCKey(table string, pks map[string][]relationship.PrimaryKey) bool {
 	if len(pks[table]) > 1 {
 		return true
 	}
 	return false
 }
 
-func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, tables []string) (map[string][]string, error) {
-	primaryKeys := make(map[string][]string)
+func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, tables []string) (map[string][]relationship.PrimaryKey, error) {
+	primaryKeys := make(map[string][]relationship.PrimaryKey)
 	for _, t := range tables {
 		var keys []relationship.PrimaryKey
 		q, err := query.ListAllPrimaryKeys(dbName, driver, t)
@@ -363,11 +342,7 @@ func GetAllPrimaryKeys(ctx context.Context, db *sql.DB, dbName, driver string, t
 		if err != nil {
 			return nil, err
 		}
-		var pks []string
-		for _, k := range keys {
-			pks = append(pks, k.Column)
-		}
-		primaryKeys[t] = pks
+		primaryKeys[t] = keys
 	}
 	return primaryKeys, nil
 }
