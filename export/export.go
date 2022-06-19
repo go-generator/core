@@ -189,9 +189,16 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			} else {
 				st.Fields[i].IsNullable = "0"
 			}
-			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
-				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
-			} else {
+			if strings.Contains(st.Fields[i].DataType, "char") {
+				if st.Fields[i].Length != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+				}
+			} else if strings.Contains(st.Fields[i].DataType, "decimal") {
+				if st.Fields[i].Precision != nil && st.Fields[i].Scale != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%d,%d)", st.Fields[i].DataType, *st.Fields[i].Precision, *st.Fields[i].Scale)
+				}
+			}
+			if len(st.Fields[i].FullDataType) == 0 {
 				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
@@ -221,9 +228,16 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			} else {
 				st.Fields[i].IsNullable = "0"
 			}
-			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") && strings.Index(st.Fields[i].DataType, "_") < 0 {
-				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
-			} else {
+			if strings.Contains(st.Fields[i].DataType, "char") {
+				if st.Fields[i].Length != nil && strings.Index(st.Fields[i].DataType, "_") < 0 {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+				}
+			} else if strings.Contains(st.Fields[i].DataType, "numeric") || strings.Contains(st.Fields[i].DataType, "decimal") {
+				if st.Fields[i].Precision != nil && st.Fields[i].Scale != nil && strings.Index(st.Fields[i].DataType, "_") < 0 {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%d,%d)", st.Fields[i].DataType, *st.Fields[i].Precision, *st.Fields[i].Scale)
+				}
+			}
+			if len(st.Fields[i].FullDataType) == 0 {
 				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
@@ -251,9 +265,16 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			} else {
 				st.Fields[i].IsNullable = "0"
 			}
-			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "char") {
-				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
-			} else {
+			if strings.Contains(st.Fields[i].DataType, "char") {
+				if st.Fields[i].Length != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+				}
+			} else if strings.Contains(st.Fields[i].DataType, "numeric") || strings.Contains(st.Fields[i].DataType, "decimal") || strings.Contains(st.Fields[i].DataType, "money") {
+				if st.Fields[i].Precision != nil && st.Fields[i].Scale != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%d,%d)", st.Fields[i].DataType, *st.Fields[i].Precision, *st.Fields[i].Scale)
+				}
+			}
+			if len(st.Fields[i].FullDataType) == 0 {
 				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
@@ -279,9 +300,16 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			return err
 		}
 		for i := range st.Fields {
-			if st.Fields[i].Length != nil && (st.Fields[i].DataType == "TEXT" || strings.Contains(st.Fields[i].DataType, "CHAR")) {
-				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
-			} else {
+			if st.Fields[i].DataType == "TEXT" || strings.Contains(st.Fields[i].DataType, "CHAR") {
+				if st.Fields[i].Length != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%s)", st.Fields[i].DataType, *st.Fields[i].Length)
+				}
+			} else if strings.Contains(st.Fields[i].DataType, "NUMERIC") {
+				if st.Fields[i].Precision != nil && st.Fields[i].Scale != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%d,%d)", st.Fields[i].DataType, *st.Fields[i].Precision, *st.Fields[i].Scale)
+				}
+			}
+			if len(st.Fields[i].FullDataType) == 0 {
 				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 			for j := range notNull {
@@ -324,9 +352,16 @@ func InitTables(ctx context.Context, db *sql.DB, database, table string, st *gdb
 			} else {
 				st.Fields[i].IsNullable = "0"
 			}
-			if st.Fields[i].Length != nil && strings.Contains(st.Fields[i].DataType, "CHAR") {
-				st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
-			} else {
+			if strings.Contains(st.Fields[i].DataType, "CHAR") {
+				if st.Fields[i].Length != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%s BYTE)", st.Fields[i].DataType, *st.Fields[i].Length)
+				}
+			} else if strings.Contains(st.Fields[i].DataType, "NUMBER") {
+				if st.Fields[i].Precision != nil && st.Fields[i].Scale != nil {
+					st.Fields[i].FullDataType = fmt.Sprintf("%s(%d,%d)", st.Fields[i].DataType, *st.Fields[i].Precision, *st.Fields[i].Scale)
+				}
+			}
+			if len(st.Fields[i].FullDataType) == 0 {
 				st.Fields[i].FullDataType = st.Fields[i].DataType
 			}
 		}
