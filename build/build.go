@@ -93,6 +93,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				column = source
 			}
 			sub["key"] = f.Key
+			sub["keyName"] = f.KeyName
 			sub["source"] = source
 			sub["Column"] = column
 			sub["column"] = strings.ToLower(column)

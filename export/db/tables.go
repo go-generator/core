@@ -17,6 +17,7 @@ type TableFields struct {
 	Length       *string `gorm:"column:length"`
 	Precision    *int    `gorm:"column:precision"`
 	Scale        *int    `gorm:"column:scale"`
+	KeyName      string  `gorm:"column:key_name"`
 	DbType       string  ``
 	FullDataType string  ``
 }
