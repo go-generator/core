@@ -13,7 +13,7 @@ import (
 	"github.com/go-generator/core/types"
 )
 
-func GenerateFiles(projectName, projectJson string, projectTemplate map[string]map[string]string, funcMap template.FuncMap, options ...map[string]map[string]string) ([]metadata.File, error) {
+func GenerateFiles(projectName, projectJson string, projectTemplate map[string]map[string]string, funcMap template.FuncMap, options ...map[string]map[string]string) ([]core.File, error) {
 	prj, err := DecodeProject([]byte(projectJson), projectName, build.InitEnv)
 	if err != nil {
 		return nil, err
@@ -33,13 +33,13 @@ func GenerateFiles(projectName, projectJson string, projectTemplate map[string]m
 }
 
 func Generate(
-	project metadata.Project,
+	project core.Project,
 	templates map[string]string,
 	funcMap template.FuncMap,
-	buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
+	buildModel func(m core.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
 	options ...func(map[string]string) map[string]interface{},
-) ([]metadata.File, error) {
-	var outputFile []metadata.File
+) ([]core.File, error) {
+	var outputFile []core.File
 	var err error
 	pathSeparator := string(os.PathSeparator)
 	var parseEnv func(map[string]string) map[string]interface{}
@@ -71,7 +71,7 @@ func Generate(
 				}
 			}
 			if !IsEmpty(text) {
-				outputFile = append(outputFile, metadata.File{Name: v.File, Content: text})
+				outputFile = append(outputFile, core.File{Name: v.File, Content: text})
 			}
 		}
 	}
@@ -104,7 +104,7 @@ func Generate(
 				}
 			}
 			if !IsEmpty(text) {
-				outputFile = append(outputFile, metadata.File{
+				outputFile = append(outputFile, core.File{
 					Name:    entityPath,
 					Content: text,
 				})
@@ -144,7 +144,7 @@ func Generate(
 						entityPath = st.FormatDirectory(entityPath)
 					}
 					if !IsEmpty(text) {
-						outputFile = append(outputFile, metadata.File{
+						outputFile = append(outputFile, core.File{
 							Name:    entityPath,
 							Content: text,
 						})
@@ -176,7 +176,7 @@ func Generate(
 							entityPath = st.FormatDirectory(entityPath)
 						}
 						if !IsEmpty(text) {
-							outputFile = append(outputFile, metadata.File{
+							outputFile = append(outputFile, core.File{
 								Name:    entityPath,
 								Content: text,
 							})
@@ -238,11 +238,11 @@ func generateFilePath(path string, m map[string]interface{}, funcMap template.Fu
 }
 
 type Entity struct {
-	Model  metadata.Model         `mapstructure:"model" json:"model,omitempty" gorm:"column:model" bson:"model,omitempty" dynamodbav:"model,omitempty" firestore:"model,omitempty"`
+	Model  core.Model         `mapstructure:"model" json:"model,omitempty" gorm:"column:model" bson:"model,omitempty" dynamodbav:"model,omitempty" firestore:"model,omitempty"`
 	Params map[string]interface{} `mapstructure:"params" json:"params,omitempty" gorm:"column:params" bson:"params,omitempty" dynamodbav:"params,omitempty" firestore:"params,omitempty"`
 }
 
-func InitProject(project metadata.Project, buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) ([]Entity, []map[string]interface{}) {
+func InitProject(project core.Project, buildModel func(m core.Model, types map[string]string, env map[string]interface{}) map[string]interface{}, options ...map[string]interface{}) ([]Entity, []map[string]interface{}) {
 	var entities []Entity
 	var collections []map[string]interface{}
 	var env map[string]interface{}
@@ -253,9 +253,9 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	}
 	if project.Models == nil || len(project.Models) == 0 {
 		if project.Collection != nil && len(project.Collection) > 0 {
-			var models []metadata.Model
+			var models []core.Model
 			for _, c := range project.Collection {
-				m := metadata.Model{Name: c}
+				m := core.Model{Name: c}
 				models = append(models, m)
 			}
 			project.Models = models
@@ -332,7 +332,7 @@ func InitProject(project metadata.Project, buildModel func(m metadata.Model, typ
 	return entities, collections
 }
 
-func HasTime(models []metadata.Model, name string) bool {
+func HasTime(models []core.Model, name string) bool {
 	for i := range models {
 		if models[i].Table == name || models[i].Name == name {
 			for _, f := range models[i].Fields {
@@ -346,7 +346,7 @@ func HasTime(models []metadata.Model, name string) bool {
 	return false
 }
 
-func GetModel(models []metadata.Model, name string) *metadata.Model {
+func GetModel(models []core.Model, name string) *core.Model {
 	for _, m := range models {
 		if m.Name == name {
 			return &m

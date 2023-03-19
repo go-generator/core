@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type Field struct {
 	Name       string `yaml:"name" mapstructure:"name" json:"name,omitempty" gorm:"column:name" bson:"name,omitempty" dynamodbav:"name,omitempty" firestore:"name,omitempty"`

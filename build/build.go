@@ -34,7 +34,7 @@ func MergeMap(m map[string]interface{}, sub map[string]string) {
 		m[k] = v
 	}
 }
-func BuildModel(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
+func BuildModel(m core.Model, types map[string]string, env map[string]interface{}) map[string]interface{} {
 	pluralize := pluralize.NewClient()
 	var re = regexp.MustCompile(`date|datetime|time`)
 	names := BuildNames(m.Name, pluralize.Plural)

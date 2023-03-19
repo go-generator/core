@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type Link struct {
 	Column string `yaml:"column" mapstructure:"column" json:"column,omitempty" gorm:"column:column" bson:"column,omitempty" dynamodbav:"column,omitempty" firestore:"column,omitempty"`

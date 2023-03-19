@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 )
 
-func LoadProject(filename string) (metadata.Project, error) {
-	var input metadata.Project
+func LoadProject(filename string) (core.Project, error) {
+	var input core.Project
 	byteValue, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return input, err
@@ -20,8 +20,8 @@ func LoadProject(filename string) (metadata.Project, error) {
 	}
 	return input, err
 }
-func LoadProjects(directory string) (map[string]metadata.Project, error) { // map[string]metadata.Project ---> "project name" : metadata project
-	projects := make(map[string]metadata.Project)
+func LoadProjects(directory string) (map[string]core.Project, error) { // map[string]metadata.Project ---> "project name" : metadata project
+	projects := make(map[string]core.Project)
 	names, err := list(directory)
 	if err != nil {
 		return nil, err

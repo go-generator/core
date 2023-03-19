@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type FileInfo struct {
 	Name       string

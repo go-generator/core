@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type Project struct {
 	Root       string            `yaml:"root" mapstructure:"root" json:"root,omitempty" gorm:"column:root" bson:"root,omitempty" dynamodbav:"root,omitempty" firestore:"root,omitempty"`

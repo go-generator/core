@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type DatabaseConfig struct {
 	DSN      string `yaml:"dsn" mapstructure:"dsn" json:"dsn,omitempty" gorm:"column:dsn" bson:"dsn,omitempty" dynamodbav:"dsn,omitempty" firestore:"dsn,omitempty"`

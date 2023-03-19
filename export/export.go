@@ -50,7 +50,7 @@ func Trim(s string, prefix, suffix string) string {
 	}
 	return s
 }
-func ToModel(types map[string]string, table string, rt []relationship.RelTables, sqlTable []gdb.TableFields, options...string) (*metadata.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
+func ToModel(types map[string]string, table string, rt []relationship.RelTables, sqlTable []gdb.TableFields, options...string) (*core.Model, error) { //s *TableInfo, conn *gorm.DB, tables []string, packageName, output string) {
 	pluralize := pluralize.NewClient()
 	origin := table
 	table = strings.ToLower(table)
@@ -63,7 +63,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		suffix = options[1]
 	}
 	table = Trim(table, prefix, suffix)
-	var m metadata.Model
+	var m core.Model
 	var raw string
 	if !strings.Contains(table, "_") {
 		raw = st.BuildSnakeName(table)
@@ -79,7 +79,7 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 		m.Table = origin
 	}
 	for _, v := range sqlTable {
-		var f metadata.Field
+		var f core.Field
 		org := v.Column
 		x := v.Column
 		if strings.ToUpper(x) == v.Column {
@@ -119,10 +119,10 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	for _, ref := range rt {
 		if ref.Table == origin {
 			refNames := build.BuildNames(ref.ReferencedTable)
-			var relModel metadata.Relationship
+			var relModel core.Relationship
 			relModel.Ref = ref.ReferencedTable
 			relModel.Model = pluralize.Singular(refNames["Name"])
-			relModel.Fields = append(relModel.Fields, metadata.Link{
+			relModel.Fields = append(relModel.Fields, core.Link{
 				Column: ref.Column,
 				To:     ref.ReferencedColumn,
 			})
@@ -140,8 +140,8 @@ func ToModel(types map[string]string, table string, rt []relationship.RelTables,
 	return &m, nil
 }
 
-func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]relationship.PrimaryKey, options...string) ([]metadata.Model, error) {
-	var projectModels []metadata.Model
+func ToModels(ctx context.Context, db *sql.DB, database string, tables []string, rt []relationship.RelTables, types map[string]string, primaryKeys map[string][]relationship.PrimaryKey, options...string) ([]core.Model, error) {
+	var projectModels []core.Model
 	for _, t := range tables {
 		var tablesData gdb.TableInfo
 		err := InitTables(ctx, db, database, t, &tablesData, primaryKeys)

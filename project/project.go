@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	metadata "github.com/go-generator/core"
+	"github.com/go-generator/core"
 	d "github.com/go-generator/core/driver"
 )
 
@@ -34,7 +34,7 @@ func SetPathEnv(key, value string) error {
 	return err
 }
 
-func ConnectDB(dbCache metadata.Database, driver string) (*sql.DB, error) {
+func ConnectDB(dbCache core.Database, driver string) (*sql.DB, error) {
 	switch driver {
 	case d.Mysql:
 		return sql.Open(driver, dbCache.MySql)
@@ -51,7 +51,7 @@ func ConnectDB(dbCache metadata.Database, driver string) (*sql.DB, error) {
 	}
 }
 
-func SelectDSN(dbCache metadata.Database, driver string) string {
+func SelectDSN(dbCache core.Database, driver string) string {
 	switch driver {
 	case d.Mysql:
 		return dbCache.MySql
@@ -68,7 +68,7 @@ func SelectDSN(dbCache metadata.Database, driver string) string {
 	}
 }
 
-func UpdateDBCache(dbCache *metadata.Database, driver, dsn string) {
+func UpdateDBCache(dbCache *core.Database, driver, dsn string) {
 	switch driver {
 	case d.Mysql:
 		dbCache.MySql = dsn
@@ -83,7 +83,7 @@ func UpdateDBCache(dbCache *metadata.Database, driver, dsn string) {
 	}
 }
 
-func GetDatabaseName(dbCache metadata.Database, driver string) (string, error) {
+func GetDatabaseName(dbCache core.Database, driver string) (string, error) {
 	switch driver {
 	case d.Mysql:
 		return GetName(dbCache.MySql)

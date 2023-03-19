@@ -12,7 +12,7 @@ import (
 	st "github.com/go-generator/core/strings"
 )
 
-func ToString(files []metadata.File) (string, error) {
+func ToString(files []core.File) (string, error) {
 	file, err := json.MarshalIndent(files, "", " ")
 	if err != nil {
 		return "", err
@@ -20,12 +20,12 @@ func ToString(files []metadata.File) (string, error) {
 	return string(file), err
 }
 func ToOutput(path, directory string,
-	input metadata.Project,
+	input core.Project,
 	templateMap map[string]string,
-	buildModel func(m metadata.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
+	buildModel func(m core.Model, types map[string]string, env map[string]interface{}) map[string]interface{},
 	funcMap template.FuncMap,
-) (metadata.Output, error) {
-	var output metadata.Output
+) (core.Output, error) {
+	var output core.Output
 	output.Path = path
 	output.Directory = directory
 	output.Path = strings.TrimSuffix(output.Path, "/")
@@ -36,8 +36,8 @@ func ToOutput(path, directory string,
 	output.Files = outputFiles
 	return output, err
 }
-func GenerateFromFile(funcMap template.FuncMap, projTmpl map[string]map[string]string, projectName, projectMetadata string, loadProject func(string) (metadata.Project, error), initEnv func(map[string]string, string) map[string]string, buildModel func(metadata.Model, map[string]string, map[string]interface{}) map[string]interface{}) (metadata.Output, error) {
-	var output metadata.Output
+func GenerateFromFile(funcMap template.FuncMap, projTmpl map[string]map[string]string, projectName, projectMetadata string, loadProject func(string) (core.Project, error), initEnv func(map[string]string, string) map[string]string, buildModel func(core.Model, map[string]string, map[string]interface{}) map[string]interface{}) (core.Output, error) {
+	var output core.Output
 	input, err := loadProject(projectMetadata)
 	if err != nil {
 		return output, err
@@ -61,8 +61,8 @@ func GenerateFromString(projectName, jsonInput string, initEnv func(map[string]s
 	return nil
 }
 
-func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string]string, string) map[string]string, models ...[]metadata.Model) (metadata.Project, error) {
-	var input metadata.Project
+func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string]string, string) map[string]string, models ...[]core.Model) (core.Project, error) {
+	var input core.Project
 	err := json.NewDecoder(bytes.NewBuffer(byteValue)).Decode(&input)
 	if err != nil {
 		return input, err
@@ -77,7 +77,7 @@ func DecodeProject(byteValue []byte, projectName string, initEnv func(map[string
 	return input, err
 }
 
-func BuildCollection(models []metadata.Model) []string {
+func BuildCollection(models []core.Model) []string {
 	var collections []string
 	for _, m := range models {
 		if !(len(m.Models) > 0 && len(m.Arrays) <= 0) {
@@ -87,7 +87,7 @@ func BuildCollection(models []metadata.Model) []string {
 	return collections
 }
 
-func ExportProject(projectTemplateName, projectName string, templates map[string]string, m []metadata.Model, initEnv func(map[string]string, string) map[string]string) (*metadata.Project, error) {
+func ExportProject(projectTemplateName, projectName string, templates map[string]string, m []core.Model, initEnv func(map[string]string, string) map[string]string) (*core.Project, error) {
 	if data, ok := templates[projectTemplateName]; ok {
 		pr, err := DecodeProject([]byte(data), projectName, initEnv, m)
 		if err != nil {

@@ -108,7 +108,7 @@ func Save(fullName string, data []byte) error {
 	return ioutil.WriteFile(fullName, data, os.ModePerm)
 }
 
-func SaveFiles(rootDirectory string, files []metadata.File) error {
+func SaveFiles(rootDirectory string, files []core.File) error {
 	for _, v := range files {
 		fullPath := rootDirectory + string(os.PathSeparator) + v.Name
 		err := SaveContent(fullPath, v.Content)
@@ -119,7 +119,7 @@ func SaveFiles(rootDirectory string, files []metadata.File) error {
 	return nil
 }
 
-func SaveModels(filePath string, models []metadata.Model, notAppendExt ...bool) error {
+func SaveModels(filePath string, models []core.Model, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&models, "", " ")
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func SaveModels(filePath string, models []metadata.Model, notAppendExt ...bool) 
 	return err
 }
 
-func SaveProject(filePath string, projectStruct metadata.Project, notAppendExt ...bool) error {
+func SaveProject(filePath string, projectStruct core.Project, notAppendExt ...bool) error {
 	data, err := json.MarshalIndent(&projectStruct, "", " ")
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func SaveProject(filePath string, projectStruct metadata.Project, notAppendExt .
 	return err
 }
 
-func SaveOutput(directory string, output metadata.Output) error {
+func SaveOutput(directory string, output core.Output) error {
 	err := SaveFiles(directory, output.Files)
 	if err != nil {
 		return fmt.Errorf("error writing files: %w", err)
@@ -161,7 +161,7 @@ func SaveOutput(directory string, output metadata.Output) error {
 	return err
 }
 
-func SaveConfig(filename string, config metadata.Config) error {
+func SaveConfig(filename string, config core.Config) error {
 	var data bytes.Buffer
 	err := yaml.NewEncoder(&data).Encode(&config)
 	if err != nil {

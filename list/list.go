@@ -5,10 +5,10 @@ import (
 	"strconv"
 
 	"fyne.io/fyne/v2/data/binding"
-	metadata "github.com/go-generator/core"
+	"github.com/go-generator/core"
 )
 
-func ShowFiles(showPath bool, data binding.ExternalStringList, dataSt binding.Struct, files []metadata.File) error {
+func ShowFiles(showPath bool, data binding.ExternalStringList, dataSt binding.Struct, files []core.File) error {
 	err := data.Set(nil)
 	if err != nil {
 		return err

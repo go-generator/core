@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type Relationship struct {
 	Ref    string `yaml:"table" mapstructure:"table" json:"table,omitempty" gorm:"column:table" bson:"table,omitempty" dynamodbav:"table,omitempty" firestore:"table,omitempty"`

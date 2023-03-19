@@ -1,4 +1,4 @@
-package metadata
+package core
 
 type Config struct {
 	Prefix      string `yaml:"prefix" mapstructure:"prefix" json:"prefix,omitempty" gorm:"column:prefix" bson:"prefix,omitempty" dynamodbav:"prefix,omitempty" firestore:"prefix,omitempty"`

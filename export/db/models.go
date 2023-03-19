@@ -9,7 +9,7 @@ type FilesDetails struct {
 	Env    []string         `json:"env"`
 	Entity []string         `json:"entity"`
 	Model  string           `json:"model"`
-	Files  []metadata.Model `json:"files"`
+	Files  []core.Model `json:"files"`
 }
 
 type Folders struct {
@@ -19,7 +19,7 @@ type Folders struct {
 type Connection struct {
 	TableName       string
 	ReferencedTable string
-	Fields          []metadata.Link
+	Fields          []core.Link
 }
 
 type JavaComPK struct {
