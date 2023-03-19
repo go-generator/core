@@ -13,8 +13,8 @@ type FieldInfo struct {
 }
 
 type Output struct {
-	Directory string `mapstructure:"directory" json:"directory,omitempty" gorm:"column:directory" bson:"directory,omitempty" dynamodbav:"directory,omitempty" firestore:"directory,omitempty"`
-	Path      string `mapstructure:"path" json:"path,omitempty" gorm:"column:path" bson:"path,omitempty" dynamodbav:"path,omitempty" firestore:"path,omitempty"`
-	Files     []File `mapstructure:"files" json:"files,omitempty" gorm:"column:files" bson:"files,omitempty" dynamodbav:"files,omitempty" firestore:"files,omitempty"`
+	Directory string `yaml:"directory" mapstructure:"directory" json:"directory,omitempty" gorm:"column:directory" bson:"directory,omitempty" dynamodbav:"directory,omitempty" firestore:"directory,omitempty"`
+	Path      string `yaml:"path" mapstructure:"path" json:"path,omitempty" gorm:"column:path" bson:"path,omitempty" dynamodbav:"path,omitempty" firestore:"path,omitempty"`
+	Files     []File `yaml:"files" mapstructure:"files" json:"files,omitempty" gorm:"column:files" bson:"files,omitempty" dynamodbav:"files,omitempty" firestore:"files,omitempty"`
 	OutFile   []FileInfo
 }
