@@ -1,6 +1,7 @@
 package build
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -132,6 +133,16 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			sub["maxlength"] = f.Length
 			sub["env"] = &env
 			sub["parent"] = &collection
+			sub["go_validate"] = ""
+			if f.Required {
+				if f.Length > 0 {
+					sub["go_validate"] = fmt.Sprintf(` validate:"required,max=%d"`, f.Length)
+				} else {
+					sub["go_validate"] = ` validate:"required"`
+				}
+			} else if f.Length > 0 {
+				sub["go_validate"] = fmt.Sprintf(` validate:"max=%d"`, f.Length)
+			}
 			if re.MatchString(x) {
 				sub["goFilterType"] = "*TimeRange"
 				sub["tsFilterType"] = "Date | DateRange"
@@ -176,6 +187,8 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 				collection["goCheckId"] = c
 				collection["goIdPrefix"] = p
 				collection["goIdType"] = f.Type
+				collection["id_json"] = tmp["name"]
+				collection["id_field"] = tmp["Name"]
 				goIds = append(goIds, "{"+tmp["name"]+"}")
 				tsIds = append(tsIds, ":"+tmp["name"])
 			} else {
@@ -234,6 +247,7 @@ func BuildModel(m metadata.Model, types map[string]string, env map[string]interf
 			collection["go_id_url"] = strings.Join(goIds, "/")
 			collection["ts_id_url"] = strings.Join(tsIds, "/")
 		} else if ck == 1 {
+			collection["go_id_url"] = strings.Join(goIds, "/")
 			for _, sub := range fields {
 				k, ok := sub["key"]
 				if ok {
